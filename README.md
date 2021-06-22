@@ -58,7 +58,7 @@ Then use incrontab -e and add the following entries for the camera:
 
 ## configuration for any CPU (base, camera, sound_player)
 ### Disable services
-'''
+```
 sudo systemctl stop bluetooth
 sudo systemctl disable bluetooth
-'''
+```

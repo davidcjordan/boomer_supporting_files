@@ -42,7 +42,7 @@ Then use incrontab -e and add the following entries for the base: The 1st copies
 A file, "bcam.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_can.
 Once the file is in place (you probably have to create the .config, systemd and user directories) then:
 ```
-mkdir ~/.config; mkdir ~/.config/systemd; mkdir ~/.config/systemd/user
+mkdir -p ~/.config/systemd/user
 systemd --user enable bcam.service
 ```
 

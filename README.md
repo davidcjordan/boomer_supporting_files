@@ -11,7 +11,7 @@ config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shel
 A file, "bbase.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_base.
 Once the file is in place (you probably have to create the .config, systemd and user directories) then:
 ```
-mkdir ~/.config; mkdir ~/.config/systemd; mkdir ~/.config/systemd/user
+mkdir -p ~/.config/systemd/user
 systemd --user enable bbase.service
 ```
 

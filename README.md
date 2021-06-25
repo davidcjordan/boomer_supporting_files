@@ -27,8 +27,8 @@ Then use incrontab -e and add the following entries for the base: The 1st copies
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE  /home/pi/boomer/scp_log.sh $@/$#
 home/pi/boomer/cam_staged       IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@/$# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
-/home/pi/boomer/staged  IN_CLOSE_WRITE  cp $@/$# /home/pi/boomer/execs
-/home/pi/boomer/execs   IN_CLOSE_WRITE  /home/pi/boomer/change_version.sh $@/$# > /home/pi/boomer/script_logs/change_version.log 2>&1
+i#/home/pi/boomer/staged  IN_CLOSE_WRITE  cp $@/$# /home/pi/boomer/execs
+/home/pi/boomer/execs   IN_CLOSE_WRITE  /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
 ```
 
 ### Directory structure:

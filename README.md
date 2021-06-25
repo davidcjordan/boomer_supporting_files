@@ -98,3 +98,10 @@ Then use incrontab -e and add the following entries for the camera:
 sudo systemctl stop bluetooth
 sudo systemctl disable bluetooth
 ```
+### enable user pi to do sudo in scripts (change_version.sh)
+```
+sudo visudo
+add the following line:
+pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
+```
+

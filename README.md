@@ -26,8 +26,7 @@ sudo vi /etc/incron.allow       #add pi as a user
 Then use incrontab -e and add the following entries for the base: The 1st copies logs to a computer for analysis; the 2nd copies cam executables to the cameras for a software update.  Note: the long text lines are difficult to edit in nano.  You can use ```sudo update-alternatives --config editor``` to change the editor to vi.
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE  /home/pi/boomer/scp_log.sh $@/$#
-/home/pi/boomer/cam_staged       IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@/$# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
-#/home/pi/boomer/staged  IN_CLOSE_WRITE  cp $@/$# /home/pi/boomer/execs
+/home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@ $# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
 /home/pi/boomer/execs   IN_CLOSE_WRITE  /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
 ```
 
@@ -37,11 +36,9 @@ pi@base:~/boomer $ ls -al
 total 116
 drwxr-xr-x 10 pi pi  4096 Jun 25 06:58 .
 drwxr-xr-x 12 pi pi  4096 Jun 24 13:14 ..
-drwxr-xr-x  2 pi pi  4096 Jun 19 09:37 archive
 drwxrwxrwx  2 pi pi 20480 Mar 31 20:23 audio
-lrwxrwxrwx  1 pi pi    62 May 18 09:36 boomer_base.out -> /home/pi/Desktop/Boomer2.0_GDB/VisualGDB/Debug/boomer_base.out
+lrwxrwxrwx  1 pi pi    62 May 18 09:36 bbase.out -> /home/pi/execs/bbase.out
 -rw-r--r--  1 pi pi   926 May 22 13:16 boomer.service
-drwxr-xr-x  2 pi pi  4096 Jun 25 06:58 cam_staged
 -rwxr-xr-x  1 pi pi  1703 May 21 04:38 change_version.sh
 drwxrwxrwx  2 pi pi 36864 Jun 24 13:29 drills
 drwxr-xr-x  2 pi pi  4096 Jun 25 06:22 execs
@@ -61,7 +58,6 @@ mkdir staged
 mkdir execs
 mkdir logs
 mkdir script_logs
-mkdir cam_staged
 git clone https://github.com/davidcjordan/audio
 git clone https://github.com/davidcjordan/drills
 ```
@@ -89,7 +85,7 @@ Then use incrontab -e and add the following entries for the camera:
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@/$# > /home/pi/boomer/script_logs/scp_log.sh 2>&1
 /home/pi/boomer/staged  IN_CLOSE_WRITE   cp $@/$# /home/pi/boomer/execs
-/home/pi/boomer/execs   IN_CREATE        /home/pi/boomer/change_version.sh $@/$# > /home/pi/boomer/script_logs/change_version.log 2>&1
+/home/pi/boomer/execs   IN_CREATE        /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
 ```
 
 ## configuration for any CPU (base, camera, sound_player)
@@ -104,4 +100,3 @@ sudo visudo
 add the following line:
 pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
 ```
-

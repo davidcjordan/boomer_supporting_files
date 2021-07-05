@@ -1,0 +1,8 @@
+alias bstart='systemctl --user start boomer.service'
+alias bstop='systemctl --user stop boomer.service'
+alias bstat='systemctl --user status boomer.service'
+alias blog='tail -f /run/shm/boomer.log'
+alias clog='rm /run/shm/boomer.log'
+alias scap='function _scap(){ sudo setcap "cap_sys_nice=eip" $1; };_scap'
+alias bps='ps -e | egrep "*cam | *base"'
+alias bsync='scp /home/pi/boomer/staged/b*.out pi@base:/home/pi/boomer/staged'

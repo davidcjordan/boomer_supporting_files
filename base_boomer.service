@@ -1,0 +1,26 @@
+[Unit]
+Description=Run Boomer Base 
+PartOf=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/boomer/bbase.out
+WorkingDirectory=/home/pi/boomer
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+#Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+#WantedBy=multi-user.target
+
+# references:
+# https://www.unixsysadmin.com/systemd-user-services/
+# https://www.howtogeek.com/687970/how-to-run-a-linux-program-at-startup-with-systemd/
+# https://trstringer.com/simple-vs-oneshot-systemd-service/
+# https://unix.stackexchange.com/questions/507911/systemctl-what-is-the-meaning-of-restart-always
+# https://stackoverflow.com/questions/39284563/how-to-set-up-a-systemd-service-to-retry-5-times-on-a-cycle-of-30-seconds
+# https://christine.website/talks/systemd-the-good-parts-2021-05-16
+

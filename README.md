@@ -84,8 +84,8 @@ Refer to file Monitoring (incrontab) section in the base to install/enable incro
 Then use incrontab -e and add the following entries for the camera:
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@/$# > /home/pi/boomer/script_logs/scp_log.sh 2>&1
-/home/pi/boomer/staged  IN_CLOSE_WRITE   cp $@/$# /home/pi/boomer/execs
-/home/pi/boomer/execs   IN_CREATE        /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
+/home/pi/boomer/staged  IN_CLOSE_WRITE   rm /home/pi/boomer/execs/$#; cp $@/$# /home/pi/boomer/execs
+/home/pi/boomer/execs   IN_CLOSE_WRITE   /home/pi/boomer/change_version.sh $@/$# > /home/pi/boomer/script_logs/change_version.log 2>&1
 ```
 
 ## configuration for any CPU (base, camera, sound_player)

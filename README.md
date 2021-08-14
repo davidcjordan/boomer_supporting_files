@@ -100,3 +100,28 @@ sudo visudo
 add the following line:
 pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
 ```
+### Installing keys for ssh & scp (instead of using passwords)
+The keys are required for transferring (scp'ing) files between computers which is used for software upgrades.
+The keys make it so passwords are not required for scp and ssh.
+```
+#Create a key on computer that will be accessing the RPi: 
+cd ~/.ssh  #keys are stored in this directory
+echo "Hit ‘enter’ for both passphrase questions when running keygen (no passphrase)"
+ssh-keygen -t rsa  #create the key
+#Copy the generated key file from your computer to the RPi to be accessed with ssh/scp:
+scp ~/.ssh/id_rsa.pub pi@base:/home/pi/.ssh
+#
+#Append the key onto the destination RPi
+#ssh to the RPi - using the password for this time
+#cd .ssh
+#cat id_rsa.pub >> authorized_keys
+```
+Test the key installation:
+Type ‘exit’ to terminate the ssh session
+Type ssh pi@<ip name or addr>
+It should not ask for a password
+
+Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/ or: https://alvinalexander.com/linux-unix/how-use-scp-without-password-backups-copy/
+
+### Install .bash_alias file
+  bash aliases provide shorthand commands for executing common operations on boomer, such as starting/stopping the base or camera and clearing the log.

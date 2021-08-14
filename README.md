@@ -5,7 +5,7 @@ config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shel
 ### Networking config:
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
 - /etc/hostapd.conf: sets 2.4 or 5G - here is a reference conf file: https://gist.github.com/renaudcerrato/db053d96991aba152cc17d71e7e0f63c
-- wpa_supplicant.conf:  add user provided wifi credentials
+- wpa_supplicant.conf:  add user provided wifi credentials if there is a public network
 
 ### systemd (launching processes on boot and restarting on failure
 A file, "bbase.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_base.
@@ -67,8 +67,7 @@ git clone https://github.com/davidcjordan/drills
 ### Networking config:
 - /boot/config.txt:  add the following 2 lines: ```dtparam=i2c_vc=on   &    dtoverlay=disable-wifi```
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for BOOM_NET (wlan0 is disabled in /boot/config.txt)
-- /etc/hostapd.conf: sets 2.4 or 5G - here is a reference conf file: https://gist.github.com/renaudcerrato/db053d96991aba152cc17d71e7e0f63c
-- wpa_supplicant.conf:  add user provided wifi credentials
+- wpa_supplicant.conf:  the file should contain BOOM_NET and it's password.
 
 ### systemd (launching processes on boot and restarting on failure
 A file, "bcam.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_can.
@@ -86,6 +85,13 @@ Then use incrontab -e and add the following entries for the camera:
 /home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@/$# > /home/pi/boomer/script_logs/scp_log.sh 2>&1
 /home/pi/boomer/staged  IN_CLOSE_WRITE   rm /home/pi/boomer/execs/$#; cp $@/$# /home/pi/boomer/execs
 /home/pi/boomer/execs   IN_CLOSE_WRITE   /home/pi/boomer/change_version.sh $@/$# > /home/pi/boomer/script_logs/change_version.log 2>&1
+```
+### Install arducam libraries:
+arducam libraries have a dependency on opencv, so that has to be installed (first line below)
+The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_Camera/tree/master/RPI
+```
+sudo apt-get install libzbar-dev libopencv-dev
+git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
 ```
 
 ## configuration for any CPU (base, camera, sound_player)

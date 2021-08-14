@@ -93,8 +93,17 @@ The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_
 sudo apt-get install libzbar-dev libopencv-dev
 git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
 ```
+### Test the camera is enabled
+```
+vcgencmd get_camera    #should get: supported=1 detected=0
+```
 
 ## configuration for any CPU (base, camera, sound_player)
+### Run raspi-config
+```
+sudo raspi-config: enable i2c (base), camera and ?audio
+```
+
 ### Disable services
 ```
 sudo systemctl stop bluetooth

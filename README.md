@@ -103,6 +103,14 @@ vcgencmd get_camera    #should get: supported=1 detected=0
 ```
 sudo raspi-config: enable i2c (base), camera and ?audio
 ```
+### edit hostname
+```
+sudo nano /etc/hostname   > change raspberrypi to left/right/base/spkr
+sudo nano /etc/hosts   > change 127.0.1 to left/right/base; add 192.168.27.2 (or 3 or 4) to base, left, right
+```
+
+### USB-Wifi adapter driver
+refer to: https://github.com/morrownr/88x2bu
 
 ### Disable services
 ```

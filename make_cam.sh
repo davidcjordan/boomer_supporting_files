@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [ -z $2 ]; then
- printf "arg 2 (device, e.g. sdb or sdc) is empty"
+ printf "arg 2 (device, e.g. sdb or sdc) is empty\n"
  exit 1
 fi
 if [ -z $1 ]; then
- printf "arg 1 (left or right) is empty"
+ printf "arg 1 (left or right) is empty\n"
  exit 1
 fi
 
@@ -35,7 +35,8 @@ fi
 
 mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
-source_dir="~/repos/boomer_supporting_files"
+source_dir="/home/pi/repos/boomer_supporting_files"
+user_id="pi"
 
 if [ ! -d ${mount_root_dir} ]; then
    # create mount directory - igno
@@ -61,34 +62,39 @@ else
 fi
 
 # change hostname
-sed -i 's/raspberrypi/$1/g' hostname
-sed -i 's/raspberrypi/$1/g' hosts
+sed -i "s/raspberrypi/${1}/g" hostname
+sed -i "s/raspberrypi/${1}/g" hosts
 
-mv dhcpcd.conf dhchpcd.conf-original
+if [ -e dhcpcd.conf ]; then
+   mv dhcpcd.conf dhchpcd.conf-original
+fi
 cp ${source_dir}/cam_dhcpcd.conf dhcpcd.conf
-sed -i 's/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g' dhcpcd.conf
-sed -i 's/my_router_ip/${eth_ip_A_B_C}1/g' dhcpcd.conf
-sed -i 's/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g' dhcpcd.conf
+sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
+sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
+sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 
-mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
+if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
+   mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
+fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
 cd ${mount_root_dir}/home/pi
 cp -p ${source_dir}/.bash_aliases .
-mkdir .ssh
-mkdir boomer
+sudo -u $user_id mkdir .ssh
+sudo -u $user_id mkdir boomer
 cd boomer
-mkdir staged
-mkdir execs
-mkdir logs
-mkdir script_logs
+sudo -u $user_id mkdir staged
+sudo -u $user_id mkdir execs
+sudo -u $user_id mkdir logs
+sudo -u $user_id mkdir script_logs
 cp -p ${source_dir}/scp_log.sh .
 cp -p ${source_dir}/change_version.sh .
+sudo -u $user_id ln -s execs/bcam.out .
 
 #make boomer.service to start cam automatically
-cd ${mount_root_dir}/home/pi
-mkdir -p .config/systemd/user
-cp -p ${source_dir}/cam_boomer.service boomer.service
+cd ${mount_root_dir}/home/${user_id}
+sudo -u $user_id mkdir -p .config/systemd/user
+cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 
 #need to copy ssh key from base to cam's .ssh
 # ? ssh enabled via advanced options CTRL-X with the raspberrypi-imager app
@@ -115,5 +121,3 @@ umount ${mount_boot_dir}
 # incrontab -e to add icron entries
 #
 # do any rasp-config commands need to be run?  sudo raspi-config nonint do_camera 0 ? necessary
-
-

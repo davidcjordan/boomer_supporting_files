@@ -1,0 +1,16 @@
+[Unit]
+Description=Run Boomer Camera 
+PartOf=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/pi/boomer/bcam.out
+WorkingDirectory=/home/pi/boomer
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+#Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

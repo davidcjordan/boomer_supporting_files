@@ -1,0 +1,5 @@
+#boomer
+dtoverlay=disable-wifi
+dtparam=i2c_vc=on
+dtoverlay=pwm
+

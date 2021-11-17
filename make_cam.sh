@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# NOTE: the following should be checked with advanced options in the raspberrypi-imager app
+#   the advanced options dialog box is optained using CTRL-X
+# - enable ssh AND set pi (user) password
+# - set locale settings
+# - skip first-run wizard
+# - the wifi settings dont' matter - they will get over-written
+
 if [ -z $2 ]; then
  printf "arg 2 (device, e.g. sdb or sdc) is empty\n"
  exit 1
@@ -38,14 +45,24 @@ mount_boot_dir="/media/boot"
 source_dir="/home/pi/repos/boomer_supporting_files"
 user_id="pi"
 
+ping -c 3 -o -q github.com
+if [ $? -ne 0 ]; then
+   printf "Failed: couldn't ping github (required for driver download)\n" >&2
+   exit 1
+fi
+
+# is this necessary - have to clone in order to run make_cam.sh
+# if [ ! -d ${source_dir} ]; then
+#    git clone https://github.com/davidcjordan/boomer_supporting_files
+# fi
+
 if [ ! -d ${mount_root_dir} ]; then
-   # create mount directory - igno
+   # create mount directory - ignore errors
    mkdir ${mount_root_dir}
 fi
 
 mount /dev/${2}2 ${mount_root_dir}
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ]; then
    printf "OK: mount /dev/${2}2 ${mount_root_dir}\n"
 else
    printf "Failed: mount /dev/${2}2 ${mount_root_dir}\n" >&2
@@ -53,8 +70,7 @@ else
 fi
 
 cd ${mount_root_dir}/etc
-if [ $? -eq 0 ]
-then
+if [ $? -eq 0 ]; then
    printf "OK: cd ${mount_root_dir}/etc\n"
 else
    printf "Failed: cd ${mount_root_dir}/etc\n" >&2
@@ -78,6 +94,7 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
+# setup boomer directories and files
 cd ${mount_root_dir}/home/pi
 cp -p ${source_dir}/.bash_aliases .
 sudo -u $user_id mkdir .ssh
@@ -96,10 +113,24 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u $user_id mkdir -p .config/systemd/user
 cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 
-#need to copy ssh key from base to cam's .ssh
-# ? ssh enabled via advanced options CTRL-X with the raspberrypi-imager app
+# have linux delete logs on start-up:
+sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
 
-#cd out of the mounted file syste
+# install the libraries needed by the cam (opencv & arducam)
+#cd /usr/lib
+#cp -p ${source_dir}/cam_libs.tar .
+#tar -xf cam_libs.tar
+
+# install usb-wifi adapter driver
+cd ${source_dir}; cd ..
+git clone https://github.com/morrownr/88x2bu.git
+cd 88x2bu
+./raspi32.sh
+# running the following has to be done when booted off the sd-card
+# sudo apt install -y raspberrypi-kernel-headers bc build-essential dkms git
+# sudo ./install-driver.sh
+
+#cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
 
@@ -116,8 +147,4 @@ cat ${source_dir}/cam_config_append.txt >> ${mount_boot_dir}/config.txt
 cd
 umount ${mount_boot_dir}
 
-
-#how to do the following (needs to boot from the sd-card)
-# incrontab -e to add icron entries
-#
-# do any rasp-config commands need to be run?  sudo raspi-config nonint do_camera 0 ? necessary
+printf("Done with make_cam (success) >> run cam_after_boot.sh after the sdcard is booted.\n")

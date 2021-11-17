@@ -1,6 +1,13 @@
 # boomer_supporting_files
 config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts are in this repository.
 
+There are scripts ```make_cam.sh``` and ```cam_after_boot.sh``` which set configuration settings and install supporing applications, libraries, etc. 
+- These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
+  - the boot partition is sdx1 where x is a, b,c or d based on what is plugged in
+  - the linux partition is sdx2
+- These scripts are run after using raspberrypi-imager to format and load a sd-card.
+- Similarly, there are ```make_base.sh``` and ```base_after_boot.sh```
+- What the scripts perform is described below - although the scripts are probably a more accurate reference.
 ## Base configuration
 ### Networking config:
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
@@ -8,11 +15,11 @@ config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shel
 - wpa_supplicant.conf:  add user provided wifi credentials if there is a public network
 
 ### systemd (launching processes on boot and restarting on failure
-A file, "bbase.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_base.
+A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bbase.
 Once the file is in place (you probably have to create the .config, systemd and user directories) then:
 ```
 mkdir -p ~/.config/systemd/user
-systemd --user enable bbase.service
+systemd --user enable boomer.service
 ```
 
 ### File monitoring (upgrades, log transfers)
@@ -29,7 +36,6 @@ Then use incrontab -e and add the following entries for the base: The 1st copies
 /home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@ $# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
 /home/pi/boomer/execs   IN_CLOSE_WRITE  /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
 ```
-
 ### Directory structure:
 ```
 pi@base:~/boomer $ ls -al
@@ -70,11 +76,11 @@ git clone https://github.com/davidcjordan/drills
 - wpa_supplicant.conf:  the file should contain BOOM_NET and it's password.
 
 ### systemd (launching processes on boot and restarting on failure
-A file, "bcam.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting boomer_can.
+A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bcam.
 Once the file is in place (you probably have to create the .config, systemd and user directories) then:
 ```
 mkdir -p ~/.config/systemd/user
-systemd --user enable bcam.service
+systemd --user enable boomer.service
 ```
 
 ### File monitoring (upgrades, log transfers)
@@ -93,6 +99,11 @@ The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_
 sudo apt-get install libzbar-dev libopencv-dev
 git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
 ```
+
+NOTE: A tar file with the libraries was created as follows:
+- tar -c -f /home/pi/cam_libs.tar arm-linux-gnueabihf/libopencv_*.so*
+- tar -r -f /home/pi/cam_libs.tar libarducam_mipicamera.so
+- this tar file is untar'd in /usr/lib with the make_cam.sh script
 ### Test the camera is enabled
 ```
 vcgencmd get_camera    #should get: supported=1 detected=0

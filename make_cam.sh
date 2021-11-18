@@ -45,7 +45,7 @@ mount_boot_dir="/media/boot"
 source_dir="/home/pi/repos/boomer_supporting_files"
 user_id="pi"
 
-ping -c 3 -o -q github.com
+ping -c 3 -q github.com
 if [ $? -ne 0 ]; then
    printf "Failed: couldn't ping github (required for driver download)\n" >&2
    exit 1
@@ -122,7 +122,7 @@ sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
 #tar -xf cam_libs.tar
 
 # install usb-wifi adapter driver
-cd ${source_dir}; cd ..
+cd ${mount_root_dir}; cd ..
 git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 ./raspi32.sh
@@ -147,4 +147,4 @@ cat ${source_dir}/cam_config_append.txt >> ${mount_boot_dir}/config.txt
 cd
 umount ${mount_boot_dir}
 
-printf("Done with make_cam (success) >> run cam_after_boot.sh after the sdcard is booted.\n")
+printf "Done with make_cam (success) >> run cam_after_boot.sh after the sdcard is booted.\n"

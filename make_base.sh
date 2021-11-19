@@ -120,4 +120,18 @@ cd 88x2bu
 cd
 umount ${mount_root_dir}
 
+#/boot/config.txt - enable i2c - used by the motors
+mount /dev/${2}1 ${mount_boot_dir}
+if [ $? -eq 0 ]
+then
+   printf "OK: mount /dev/${2}1 ${mount_boot_dir}\n"
+else
+   printf "Failed: mount /dev/${2}1 ${mount_boot_dir}\n" >&2
+   exit 1
+fi
+sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
+
+cd
+umount ${mount_boot_dir}
+
 printf "Done with make_base (success) \n"

@@ -127,15 +127,12 @@ sudo -u $user_id mkdir repos; cd repos
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 ./raspi32.sh
-# running the following has to be done when booted off the sd-card
-# sudo apt install -y raspberrypi-kernel-headers bc build-essential dkms git
-# sudo ./install-driver.sh
 
 #cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
 
-#/boot/config.txt:
+#/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
 mount /dev/${2}1 ${mount_boot_dir}
 if [ $? -eq 0 ]
 then
@@ -144,7 +141,15 @@ else
    printf "Failed: mount /dev/${2}1 ${mount_boot_dir}\n" >&2
    exit 1
 fi
-cat ${source_dir}/cam_config_append.txt >> ${mount_boot_dir}/config.txt
+sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
+echo "" >> ${mount_boot_dir}/config.txt
+echo "#boomer" >> ${mount_boot_dir}/config.txt
+echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
+echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
+echo "start_x=1" >> ${mount_boot_dir}/config.txt
+echo "gpu_mem=128" >> ${mount_boot_dir}/config.txt
+echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
+
 cd
 umount ${mount_boot_dir}
 

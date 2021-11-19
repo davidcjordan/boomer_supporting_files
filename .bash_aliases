@@ -6,3 +6,6 @@ alias clog='rm /run/shm/boomer.log'
 alias scap='function _scap(){ sudo setcap "cap_sys_nice=eip" $1; };_scap'
 alias bps='ps -e | egrep "*cam | *base"'
 alias bsync='scp /home/pi/boomer/staged/b*.out pi@base:/home/pi/boomer/staged'
+alias basesync='scp /home/pi/boomer/staged/base*.out pi@base:/home/pi/boomer/staged'
+alias bcamsync='scp /home/pi/boomer/staged/bcam*.out pi@base:/home/pi/boomer/staged'
+alias pulse="sudo sh -c 'cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 23000000 > period; echo 8000000 > duty_cycle; echo 1 > enable'"

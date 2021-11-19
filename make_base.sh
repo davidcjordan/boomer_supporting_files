@@ -68,7 +68,7 @@ sed -i "s/raspberrypi/${1}/g" hosts
 if [ -e dhcpcd.conf ]; then
    mv dhcpcd.conf dhchpcd.conf-original
 fi
-cp -p ${source_dir}/cam_dhcpcd.conf dhcpcd.conf
+cp -p ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
 sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf

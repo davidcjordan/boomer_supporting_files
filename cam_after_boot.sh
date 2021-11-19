@@ -22,10 +22,9 @@ else
    exit 1
 fi
 
-#more libraries ?? with bullseye linux
-sudo apt-get install libvtk6.3
-sudo apt-get install libglu1-mesa
-sudo apt-get install -y i2c-tools
+# build & install the wifi-driver
+sudo apt install -y dkms
+sudo ./install-driver.sh
 
 systemd --user enable boomer.service
 
@@ -41,9 +40,3 @@ update-alternatives --auto vi --quiet
 sudo vi /etc/incron.allow 
 # add incrobtab to add entries:
 incrontab -e
-
-# build & install the wifi-driver
-sudo apt install -y raspberrypi-kernel-headers bc build-essential dkms git
-sudo ./install-driver.sh
-
-# do any rasp-config commands need to be run?  sudo raspi-config nonint do_camera 0 ? necessary

@@ -12,7 +12,7 @@ if [ -z $2 ]; then
  exit 1
 fi
 if [ -z $1 ]; then
- printf "arg 1 (left or right) is empty\n"
+ printf "arg 1 (base) is empty\n"
  exit 1
 fi
 
@@ -20,25 +20,14 @@ fi
 if [ -z $3 ]; then
    # normal case (using Daves enet switch)
    eth_ip_A_B_C="192.168.0."
-   if [ $1 == "left" ]; then
-       eth_ip_D="43"
-   else
-       eth_ip_D="44"
-   fi
+   eth_ip_D="42"
 else
    # testing on Tom's network
    eth_ip_A_B_C="10.0.1."
-   if [ $1 == "left" ]; then
-       eth_ip_D="103"
-   else
-       eth_ip_D="104"
-   fi
+   eth_ip_D="102"
 fi
-if [ $1 == "left" ]; then
-      boom_net_ip_A_B_C_D="192.168.27.3"
-else
-      boom_net_ip_A_B_C_D="192.168.27.4"
-fi
+
+boom_net_ip_A_B_C_D="192.168.27.2"
 
 mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
@@ -50,11 +39,6 @@ if [ $? -ne 0 ]; then
    printf "Failed: couldn't ping github (required for driver download)\n" >&2
    exit 1
 fi
-
-# is this necessary - have to clone in order to run make_cam.sh
-# if [ ! -d ${source_dir} ]; then
-#    git clone https://github.com/davidcjordan/boomer_supporting_files
-# fi
 
 if [ ! -d ${mount_root_dir} ]; then
    # create mount directory - ignore errors
@@ -106,46 +90,29 @@ sudo -u $user_id mkdir logs
 sudo -u $user_id mkdir script_logs
 sudo -u $user_id cp -p ${source_dir}/scp_log.sh .
 sudo -u $user_id cp -p ${source_dir}/change_version.sh .
-sudo -u $user_id ln -s execs/bcam.out .
+sudo -u $user_id cp -p ${source_dir}/scp_cam_executables.sh .
+sudo -u $user_id ln -s execs/bbase.out .
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
 sudo -u $user_id mkdir -p .config/systemd/user
-sudo -u $user_id cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
+sudo -u $user_id cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
 sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
 
-# install the libraries needed by the cam (opencv & arducam)
-#cd /usr/lib
-#cp -p ${source_dir}/cam_libs.tar .
-#tar -xf cam_libs.tar
-
 # install usb-wifi adapter driver
-cd ${mount_root_dir}/home/${user_id}
+cd ${mount_root_dir}/home/pi
 sudo -u $user_id mkdir repos; cd repos
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 ./raspi32.sh
 # running the following has to be done when booted off the sd-card
-# sudo apt install -y raspberrypi-kernel-headers bc build-essential dkms git
+# sudo apt install -y dkms git
 # sudo ./install-driver.sh
 
 #cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
 
-#/boot/config.txt:
-mount /dev/${2}1 ${mount_boot_dir}
-if [ $? -eq 0 ]
-then
-   printf "OK: mount /dev/${2}1 ${mount_boot_dir}\n"
-else
-   printf "Failed: mount /dev/${2}1 ${mount_boot_dir}\n" >&2
-   exit 1
-fi
-cat ${source_dir}/cam_config_append.txt >> ${mount_boot_dir}/config.txt
-cd
-umount ${mount_boot_dir}
-
-printf "Done with make_cam (success) >> run cam_after_boot.sh after the sdcard is booted.\n"
+printf "Done with make_base (success) \n"

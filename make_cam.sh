@@ -80,6 +80,13 @@ fi
 # change hostname
 sed -i "s/raspberrypi/${1}/g" hostname
 sed -i "s/raspberrypi/${1}/g" hosts
+echo "192.168.27.2    base" >> hosts
+echo "192.168.27.3    left" >> hosts
+echo "192.168.27.4    right" >> hosts
+echo "192.168.0.40    daves" >> hosts
+#echo "192.168.0.42    base" >> hosts
+#echo "192.168.0.43    left" >> hosts
+#echo "192.168.0.44    right" >> hosts
 
 if [ -e dhcpcd.conf ]; then
    mv dhcpcd.conf dhchpcd.conf-original
@@ -93,6 +100,9 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+
+sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+#in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}

@@ -1,20 +1,24 @@
 #!/bin/bash
-ssh-keygen -t rsa -f /home/{user}/.ssh/id_rsa -q -N ""
+
+sudo sed 
+
+ssh-keygen -t rsa -f ${HOME}/.ssh/${HOSTNAME}_id_rsa -q -N ""
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
    printf "Failed: ssh-keygen\n" >&2
    exit 1
 fi
-ssh-copy-id pi@192.168.27.2
+# add bsae rpi to transfer log fils over wifi
+ssh-copy-id -i ${HOME}/.ssh/${HOSTNAME}_id_rsa base
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
    printf "Failed: ssh-copy-id pi@192.168.27.2\n" >&2
    exit 1
 fi
-# add daves rpi
-ssh-copy-id pi@192.168.0.40
+# add daves rpi to transfer log fils over enet
+ssh-copy-id daves
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.0.40\n"
 else
@@ -24,6 +28,7 @@ fi
 
 # build & install the wifi-driver
 sudo apt install -y dkms
+cd ~/repos/88x2bu
 sudo ./install-driver.sh
 
 systemd --user enable boomer.service
@@ -39,4 +44,6 @@ update-alternatives --auto vi --quiet
 #add pi as a user
 sudo vi /etc/incron.allow 
 # add incrobtab to add entries:
+printf 
 incrontab -e
+

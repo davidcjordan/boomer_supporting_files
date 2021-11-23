@@ -42,19 +42,12 @@ fi
 
 mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
-source_dir="/home/pi/repos/boomer_supporting_files"
-user_id="pi"
-
+source_dir="${HOME}/repos/boomer_supporting_files"
 ping -c 3 -q github.com
 if [ $? -ne 0 ]; then
    printf "Failed: couldn't ping github (required for driver download)\n" >&2
    exit 1
 fi
-
-# is this necessary - have to clone in order to run make_cam.sh
-# if [ ! -d ${source_dir} ]; then
-#    git clone https://github.com/davidcjordan/boomer_supporting_files
-# fi
 
 if [ ! -d ${mount_root_dir} ]; then
    # create mount directory - ignore errors
@@ -80,6 +73,7 @@ fi
 # change hostname
 sed -i "s/raspberrypi/${1}/g" hostname
 sed -i "s/raspberrypi/${1}/g" hosts
+#add host IPs:
 echo "192.168.27.2    base" >> hosts
 echo "192.168.27.3    left" >> hosts
 echo "192.168.27.4    right" >> hosts
@@ -101,27 +95,28 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
+# generate the en_US locate to avoid a login warning
 sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
 #in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
 # setup boomer directories and files
-cd ${mount_root_dir}/home/${user_id}
-sudo -u $user_id cp -p ${source_dir}/.bash_aliases .
-sudo -u $user_id mkdir .ssh
-sudo -u $user_id mkdir boomer
+cd ${mount_root_dir}/${HOME}
+sudo -u $USER cp -p ${source_dir}/.bash_aliases .
+sudo -u $USER mkdir .ssh
+sudo -u $USER mkdir boomer
 cd boomer
-sudo -u $user_id mkdir staged
-sudo -u $user_id mkdir execs
-sudo -u $user_id mkdir logs
-sudo -u $user_id mkdir script_logs
-sudo -u $user_id cp -p ${source_dir}/scp_log.sh .
-sudo -u $user_id cp -p ${source_dir}/change_version.sh .
-sudo -u $user_id ln -s execs/bcam.out .
+sudo -u $USER mkdir staged
+sudo -u $USER mkdir execs
+sudo -u $USER mkdir logs
+sudo -u $USER mkdir script_logs
+sudo -u $USER cp -p ${source_dir}/scp_log.sh .
+sudo -u $USER cp -p ${source_dir}/change_version.sh .
+sudo -u $USER ln -s execs/bcam.out .
 
 #make boomer.service to start cam automatically
-cd ${mount_root_dir}/home/${user_id}
-sudo -u $user_id mkdir -p .config/systemd/user
-sudo -u $user_id cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
+cd ${mount_root_dir}/${HOME}
+sudo -u $USER mkdir -p .config/systemd/user
+sudo -u $USER cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
 sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
@@ -129,12 +124,13 @@ sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
 # install the libraries needed by the cam (opencv & arducam)
 #cd /usr/lib
 #cp -p ${source_dir}/cam_libs.tar .
-#tar -xf cam_libs.tar
+#tar -xf cam_libs.tar.gz
 
-# install usb-wifi adapter driver
-cd ${mount_root_dir}/home/${user_id}
-sudo -u $user_id mkdir repos; cd repos
-sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
+# install supporting [install] files & usb-wifi adapter driver
+cd ${mount_root_dir}/${HOME}
+sudo -u $USER mkdir repos; cd repos
+sudo -u $USER git clone https://github.com/davidcjordan/boomer_supporting_files
+sudo -u $USER git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 ./raspi32.sh
 

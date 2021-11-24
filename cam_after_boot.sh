@@ -1,10 +1,12 @@
 #!/bin/bash
 # ssh keys:
-# cam: keys goto base, daves
-# base: keys goto cams, daves, speaker
-# daves: keys toto base, cams, speaker
+# cam: key copied to base, daves
+# base: key copied to cams, daves, speaker
+# daves: key copied base, cams, speaker
 
-ssh-keygen -t rsa -f ${HOME}/.ssh/${HOSTNAME}_id_rsa -q -N ""
+#NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
+#   ssh defaults to the filename id_rsa
+ssh-keygen -t rsa -f ${HOME}/.ssh/id_rsa -q -N ""
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
@@ -12,7 +14,7 @@ else
    exit 1
 fi
 # add base rpi to transfer log fils over wifi
-ssh-copy-id -i ${HOME}/.ssh/${HOSTNAME}_id_rsa base
+ssh-copy-id base
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else

@@ -31,8 +31,8 @@ boom_net_ip_A_B_C_D="192.168.27.2"
 
 mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
-source_dir="/home/pi/repos/boomer_supporting_files"
 user_id="pi"
+source_dir="/home/${user_id}/repos/boomer_supporting_files"
 
 ping -c 3 -q github.com
 if [ $? -ne 0 ]; then
@@ -95,16 +95,17 @@ sudo -u $user_id mkdir logs
 sudo -u $user_id mkdir script_logs
 sudo -u $user_id cp -p ${source_dir}/scp_log.sh .
 sudo -u $user_id cp -p ${source_dir}/change_version.sh .
-sudo -u $user_id cp -p ${source_dir}/scp_cam_executables.sh .
-sudo -u $user_id ln -s execs/bbase.out .
+sudo -u $user_id cp -p ${source_dir}/process_staged_files.sh .
+sudo -u git clone https://github.com/davidcjordan/drills
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
+sudo -u $user_id mkdir this_boomers_data #holds cam_params, shottable, other config data
 sudo -u $user_id mkdir -p .config/systemd/user
 sudo -u $user_id cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
-sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" /etc/rc.local
+sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
 
 # install usb-wifi adapter driver
 cd ${mount_root_dir}/home/pi

@@ -1,18 +1,19 @@
 # boomer_supporting_files
 config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts are in this repository.
 
-There are scripts ```make_cam.sh``` and ```cam_after_boot.sh``` which set configuration settings and install supporing applications, libraries, etc. 
+There are scripts ```make_cam.sh``` and ```cam_after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
 - These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
-  - the boot partition is sdx1 where x is a, b,c or d based on what is plugged in
+  - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
   - the linux partition is sdx2
 - These scripts are run after using raspberrypi-imager to format and load a sd-card.
 - Similarly, there are ```make_base.sh``` and ```base_after_boot.sh```
-- What the scripts perform is described below - although the scripts are probably a more accurate reference.
+- What the scripts perform is described below - although the scripts are a more accurate reference.
 ## Base configuration
 ### Networking config:
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
 - /etc/hostapd.conf: sets 2.4 or 5G - here is a reference conf file: https://gist.github.com/renaudcerrato/db053d96991aba152cc17d71e7e0f63c
 - wpa_supplicant.conf:  add user provided wifi credentials if there is a public network
+- /etc/hosts has the IP addresses for left, right, base and the supporting RPi (Daves)
 
 ### systemd (launching processes on boot and restarting on failure
 A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bbase.
@@ -42,31 +43,22 @@ pi@base:~/boomer $ ls -al
 total 116
 drwxr-xr-x 10 pi pi  4096 Jun 25 06:58 .
 drwxr-xr-x 12 pi pi  4096 Jun 24 13:14 ..
-drwxrwxrwx  2 pi pi 20480 Mar 31 20:23 audio
 lrwxrwxrwx  1 pi pi    62 May 18 09:36 bbase.out -> /home/pi/execs/bbase.out
 -rw-r--r--  1 pi pi   926 May 22 13:16 boomer.service
 -rwxr-xr-x  1 pi pi  1703 May 21 04:38 change_version.sh
 drwxrwxrwx  2 pi pi 36864 Jun 24 13:29 drills
 drwxr-xr-x  2 pi pi  4096 Jun 25 06:22 execs
 drwxr-xr-x  2 pi pi  4096 Jun 23 13:50 logs
--rwxr-xr-x  1 pi pi   376 Jun 11 08:26 play_file.sh
--rw-r--r--  1 pi pi    50 May 19 06:29 pswd
--rwxr-xr-x  1 pi pi   738 Jun 11 12:22 scp_cam_executables.sh
+-rwxr-xr-x  1 pi pi   738 Jun 11 12:22 process_staged_files.sh
 -rwxr-xr-x  1 pi pi   791 Jun 19 09:41 scp_log.sh
 drwxr-xr-x  2 pi pi  4096 May 20 12:18 script_logs
 drwxr-xr-x  2 pi pi  4096 Jun 25 06:58 staged
 ```
-To get this structure:
-```
-mkdir boomer
-cd boomer
-mkdir staged
-mkdir execs
-mkdir logs
-mkdir script_logs
-git clone https://github.com/davidcjordan/audio
-git clone https://github.com/davidcjordan/drills
-```
+On the base RPi, there is an additional directory ```drills``` which is cloned from: https://github.com/davidcjordan/drills
+
+On the speaker RPi, there is an additional directory ```audo``` which is cloned from: https://github.com/davidcjordan/audio
+
+A directory in the home directory ```this_boomers_data``` is also created - it holds machine specific files such as cam_parameters, ball throwing configuration (shot table), and other config files.  It will contain files used by the User Interface to display the boomer ID, e.g. Boomer #3, etc.
 
 ## Camera configuration
 
@@ -100,7 +92,7 @@ sudo apt-get install libzbar-dev libopencv-dev
 git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
 ```
 
-NOTE: A tar file with the libraries was created as follows:
+NOTE: [!THIS IS A WORK IN PROGRESS AND ISN'T FINISHED] A tar file with the libraries was created as follows:
 - tar -c -f /home/pi/cam_libs.tar arm-linux-gnueabihf/libopencv_*.so*
 - tar -r -f /home/pi/cam_libs.tar libarducam_mipicamera.so
 - this tar file is untar'd in /usr/lib with the make_cam.sh script

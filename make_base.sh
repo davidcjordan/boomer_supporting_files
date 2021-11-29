@@ -85,7 +85,7 @@ cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
-sudo -u $user_id cp -p ${source_dir}/.bash_aliases .
+sudo -u $user_id ln -s ${source_dir}/.bash_aliases
 sudo -u $user_id mkdir .ssh
 sudo -u $user_id mkdir boomer
 cd boomer
@@ -93,9 +93,9 @@ sudo -u $user_id mkdir staged
 sudo -u $user_id mkdir execs
 sudo -u $user_id mkdir logs
 sudo -u $user_id mkdir script_logs
-sudo -u $user_id cp -p ${source_dir}/scp_log.sh .
-sudo -u $user_id cp -p ${source_dir}/change_version.sh .
-sudo -u $user_id cp -p ${source_dir}/process_staged_files.sh .
+sudo -u $user_id ln -s ${source_dir}/scp_log.sh .
+sudo -u $user_id ln -s ${source_dir}/change_version.sh .
+sudo -u $user_id ln -s ${source_dir}/process_staged_files.sh .
 sudo -u git clone https://github.com/davidcjordan/drills
 
 #make boomer.service to start cam automatically
@@ -105,11 +105,12 @@ sudo -u $user_id mkdir -p .config/systemd/user
 sudo -u $user_id cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
-sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
+sed -i "s/exit 0/rm \/home\/${user_id}\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
 
 # install usb-wifi adapter driver
-cd ${mount_root_dir}/home/pi
+cd ${mount_root_dir}/home/${user_id}
 sudo -u $user_id mkdir repos; cd repos
+sudo -u $user_id git clone https://github.com/mdavidcjordan/boomer_supporting_files
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
 cd 88x2bu
 ./raspi32.sh

@@ -103,7 +103,7 @@ sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" etc/locale.gen
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
-sudo -u ${user_id} cp -p ${source_dir}/.bash_aliases .
+sudo -u ${user_id} ln -s ${source_dir}/.bash_aliases
 sudo -u ${user_id} mkdir .ssh
 sudo -u ${user_id} mkdir boomer
 cd boomer
@@ -111,8 +111,8 @@ sudo -u ${user_id} mkdir staged
 sudo -u ${user_id} mkdir execs
 sudo -u ${user_id} mkdir logs
 sudo -u ${user_id} mkdir script_logs
-sudo -u ${user_id} cp -p ${source_dir}/scp_log.sh .
-sudo -u ${user_id} cp -p ${source_dir}/change_version.sh .
+sudo -u ${user_id} ln -s ${source_dir}/scp_log.sh
+sudo -u ${user_id} ln -s ${source_dir}/change_version.sh
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
@@ -129,7 +129,7 @@ sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/et
 #tar -xf cam_libs.tar.gz
 
 # install supporting [install] files & usb-wifi adapter driver
-cd ${mount_root_dir}/${HOME}
+cd ${mount_root_dir}/home/${user_id}
 sudo -u $USER mkdir repos; cd repos
 sudo -u $USER git clone https://github.com/davidcjordan/boomer_supporting_files
 sudo -u $USER git clone https://github.com/morrownr/88x2bu.git

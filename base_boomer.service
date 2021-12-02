@@ -13,8 +13,9 @@ Restart=always
 RestartSec=10
 
 [Install]
-WantedBy=default.target
-#WantedBy=multi-user.target
+WantedBy=multi-user.target
+#default target includes the GUI whereas multi-user means networking is up.
+#WantedBy=default.target
 
 # references:
 # https://www.unixsysadmin.com/systemd-user-services/

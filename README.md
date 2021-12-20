@@ -72,7 +72,7 @@ A file, "boomer.service" is placed in ~/.config/systemd/user.  This file control
 Once the file is in place (you probably have to create the .config, systemd and user directories) then:
 ```
 mkdir -p ~/.config/systemd/user
-systemd --user enable boomer.service
+systemctl --user enable boomer.service
 ```
 
 ### File monitoring (upgrades, log transfers)

@@ -57,5 +57,5 @@ sudo systemctl stop bluetooth
 sudo systemctl disable bluetooth
 
 # need to transfer in executables and set up
-systemd --user enable boomer.service
+systemctl --user enable boomer.service
 

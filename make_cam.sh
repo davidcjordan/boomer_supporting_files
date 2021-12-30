@@ -1,7 +1,11 @@
 #!/bin/bash
 
+# This script should be run as sudo, e.g. sudo bash make_cam.sh  
+#   refer to: stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912
+
 # NOTE: the following should be checked with advanced options in the raspberrypi-imager app
-#   the advanced options dialog box is optained using CTRL-X
+#   the advanced options dialog box is optained using CTRL-SHIFT-x
+# reference for advanced options: easyprogramming.net/raspberrypi/raspberry_pi_imager_advanced_options.php
 # - enable ssh AND set pi (user) password
 # - set locale settings
 # - skip first-run wizard
@@ -133,14 +137,21 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u $USER mkdir repos; cd repos
 sudo -u $USER git clone https://github.com/davidcjordan/boomer_supporting_files
 sudo -u $USER git clone https://github.com/morrownr/88x2bu.git
-cd 88x2bu
+sudo -u $USER git https://github.com/morrownr/88x2bu-20210702
+cd 88x2bu-20210702
 ./raspi32.sh
 
 #cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
 
+
 #/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
+if [ ! -d ${mount_boot_dir} ]; then
+   # create mount directory - ignore errors
+   mkdir ${mount_boot_dir}
+fi
+
 mount /dev/${2}1 ${mount_boot_dir}
 if [ $? -eq 0 ]
 then
@@ -155,7 +166,7 @@ echo "#boomer" >> ${mount_boot_dir}/config.txt
 echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
 echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
 echo "start_x=1" >> ${mount_boot_dir}/config.txt
-echo "gpu_mem=128" >> ${mount_boot_dir}/config.txt
+echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt
 echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
 
 cd

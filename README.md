@@ -6,6 +6,10 @@ There are scripts ```make_cam.sh``` and ```cam_after_boot.sh``` which set config
   - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
   - the linux partition is sdx2
 - These scripts are run after using raspberrypi-imager to format and load a sd-card.
+  - ! The rpi-imager advanced options need to be set using CTRL-SHIFT-x:    [reference](https://www.easyprogramming.net/raspberrypi/raspberry_pi_imager_advanced_options.php)
+    - ssh enabled, enable WiFi to set country code and temporary SID, locale settings
+    - these settings can be saved and used on multiple runs if the imager
+  - ! the scripts should be run as sudo, like this: ```sudo bash make_cam.sh```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 - Similarly, there are ```make_base.sh``` and ```base_after_boot.sh```
 - What the scripts perform is described below - although the scripts are a more accurate reference.
 ## Base configuration
@@ -119,6 +123,19 @@ refer to: https://github.com/morrownr/88x2bu
 ```
 sudo systemctl stop bluetooth
 sudo systemctl disable bluetooth
+sudo systemctl stop avahi-daemon
+sudo systemctl disable avahi-daemon
+```
+If snapd has been installed (to get cmake) then disable it:
+```
+sudo systemctl disable snapd.service
+sudo systemctl disable snapd.socket
+sudo systemctl disable snapd.seeded
+sudo systemctl disable snapd.snap-repair.timer
+```
+Disable swap:
+```
+sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
 ```
 ### enable user pi to do sudo in scripts (change_version.sh)
 ```

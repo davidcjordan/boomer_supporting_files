@@ -83,6 +83,9 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
+#disable swap
+sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
 sudo -u $user_id ln -s ${source_dir}/.bash_aliases
@@ -112,6 +115,7 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u $user_id mkdir repos; cd repos
 sudo -u $user_id git clone https://github.com/mdavidcjordan/boomer_supporting_files
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
+sudo -u $user_id git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu
 ./raspi32.sh
 # running the following has to be done when booted off the sd-card
@@ -121,6 +125,12 @@ cd 88x2bu
 #cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
+
+#/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
+if [ ! -d ${mount_boot_dir} ]; then
+   # create mount directory - ignore errors
+   mkdir ${mount_boot_dir}
+fi
 
 #/boot/config.txt - enable i2c - used by the motors
 mount /dev/${2}1 ${mount_boot_dir}

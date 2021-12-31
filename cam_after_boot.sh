@@ -32,7 +32,7 @@ fi
 
 # build & install the wifi-driver
 sudo apt install -y dkms
-cd ~/repos/88x2bu
+cd ~/repos/88x2bu-20210702
 sudo ./install-driver.sh
 
 # use vi as an editor for crontab
@@ -55,6 +55,8 @@ incrontab ${source_dir}/incrontab_cam.txt
 
 sudo systemctl stop bluetooth
 sudo systemctl disable bluetooth
+sudo systemctl stop avahi-daemon
+sudo systemctl disable avahi-daemon
 
 # need to transfer in executables and set up
 systemctl --user enable boomer.service

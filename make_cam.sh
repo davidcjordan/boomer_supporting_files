@@ -101,8 +101,11 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
-# generate the en_US locate to avoid a login warning
-sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" etc/locale.gen
+#disable swap
+sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+
+# TODO:  this may not be necessary? generate the en_US locate to avoid a login warning
+# sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
 #in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
 # setup boomer directories and files
@@ -134,10 +137,10 @@ sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/et
 
 # install supporting [install] files & usb-wifi adapter driver
 cd ${mount_root_dir}/home/${user_id}
-sudo -u $USER mkdir repos; cd repos
-sudo -u $USER git clone https://github.com/davidcjordan/boomer_supporting_files
-sudo -u $USER git clone https://github.com/morrownr/88x2bu.git
-sudo -u $USER git https://github.com/morrownr/88x2bu-20210702
+sudo -u ${user_id} mkdir repos; cd repos
+sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
+sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
+sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702
 ./raspi32.sh
 
@@ -149,7 +152,7 @@ umount ${mount_root_dir}
 #/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
 if [ ! -d ${mount_boot_dir} ]; then
    # create mount directory - ignore errors
-   mkdir ${mount_boot_dir}
+   # mkdir ${mount_boot_dir}
 fi
 
 mount /dev/${2}1 ${mount_boot_dir}

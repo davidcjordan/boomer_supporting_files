@@ -142,7 +142,7 @@ sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_f
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702
-./raspi32.sh
+./raspiOS-32.sh
 
 #cd out of the mounted file system before un-mounting
 cd
@@ -152,7 +152,7 @@ umount ${mount_root_dir}
 #/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
 if [ ! -d ${mount_boot_dir} ]; then
    # create mount directory - ignore errors
-   # mkdir ${mount_boot_dir}
+   mkdir ${mount_boot_dir}
 fi
 
 mount /dev/${2}1 ${mount_boot_dir}

@@ -8,4 +8,11 @@ alias bps='ps -e | egrep "*cam | *base"'
 alias bsync='scp /home/pi/boomer/staged/b*.out pi@base:/home/pi/boomer/staged'
 alias basesync='scp /home/pi/boomer/staged/base*.out pi@base:/home/pi/boomer/staged'
 alias bcamsync='scp /home/pi/boomer/staged/bcam*.out pi@base:/home/pi/boomer/staged'
-alias pulse="sudo sh -c 'cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 23000000 > period; echo 8000000 > duty_cycle; echo 1 > enable'"
+
+alias bclean='rm -v build/CMakeFiles/*/*.o'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+alias ls='ls --color=auto'
+alias pulse16='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period; echo 8000000 > duty_cycle; echo 1 > enable'\'''
+alias pulse21='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 21000000 > period; echo 8000000 > duty_cycle; echo 1 > enable'\'''

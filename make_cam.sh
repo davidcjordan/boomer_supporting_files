@@ -104,8 +104,7 @@ cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 #disable swap
 sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
 
-# TODO:  this may not be necessary? generate the en_US locate to avoid a login warning
-# sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
+sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
 #in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
 # setup boomer directories and files

@@ -19,7 +19,7 @@ if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
    printf "Failed: ssh-copy-id pi@192.168.27.2\n" >&2
-   exit 1
+   #exit 1
 fi
 # add daves rpi to transfer log fils over enet
 ssh-copy-id daves
@@ -27,7 +27,7 @@ if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.0.40\n"
 else
    printf "Failed: ssh-copy-id pi@192.168.0.40\n" >&2
-   exit 1
+   #exit 1
 fi
 
 # build & install the wifi-driver
@@ -61,3 +61,15 @@ sudo systemctl disable avahi-daemon
 # need to transfer in executables and set up
 systemctl --user enable boomer.service
 
+# load arducam shared library (.so), which requires opencv shared libraries installed first
+sudo apt update
+sudo apt install git
+sudo apt install i2c-dev
+sudo apt install libzbar-dev libopencv-dev
+git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
+
+# fix locale warning
+sudo locale-gen
+sudo update-locale en_US.UTF-8
+# sudo locale-gen --purge --no-archive 
+# sudo update-initramfs -u

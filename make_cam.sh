@@ -104,8 +104,14 @@ cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 # put i2c-dev in /etc/modules file (this is usually done with raspi-config)
 # sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
 echo "i2c-dev" >> /etc/modules
+# the following is in raspi-config, but doesn't appear to be necessary:
+# BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
+# if ! [ -e $BLACKLIST ]; then
+#     touch $BLACKLIST
+#   fi
+# sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
 
-#TODO: delete the following if systemctl disable dphys-swapfile.service works
+#the following is unnecessary to disable swap, using: systemctl disable dphys-swapfile.service
 #sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
 
 # fix locale

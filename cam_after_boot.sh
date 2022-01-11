@@ -33,6 +33,9 @@ fi
 # without update, then install libopencv will fail
 sudo apt update
 
+# enable i2c (creates /dev/i2c-0 -1)
+sudo modprobe i2c-dev
+
 # build & install the wifi-driver
 sudo apt --yes --force-yes install dkms
 cd ~/repos/88x2bu-20210702
@@ -69,6 +72,8 @@ sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
 sudo systemctl stop systemd-timesyncd.service
 sudo systemctl disable systemd-timesyncd.service
+sudo systemctl stop alsa-state.service
+sudo systemctl disable alsa-state.service
 
 # need to transfer in executables and set up
 systemctl --user enable boomer.service

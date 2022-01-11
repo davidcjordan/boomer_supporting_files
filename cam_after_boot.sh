@@ -14,7 +14,8 @@ else
    exit 1
 fi
 # add base rpi to transfer log fils over wifi
-ssh-copy-id base
+#ssh-copy-id base
+printf "!!Skipping ssh-copy-id base"
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
@@ -22,13 +23,16 @@ else
    #exit 1
 fi
 # add daves rpi to transfer log fils over enet
-ssh-copy-id daves
+#ssh-copy-id daves
+printf "!!Skipping ssh-copy-id daves"
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.0.40\n"
 else
    printf "Failed: ssh-copy-id pi@192.168.0.40\n" >&2
    #exit 1
 fi
+
+source_dir="/home/${USER}/repos/boomer_supporting_files"
 
 # without update, then install libopencv will fail
 sudo apt update
@@ -37,7 +41,7 @@ sudo apt update
 sudo modprobe i2c-dev
 
 # build & install the wifi-driver
-sudo apt --yes --force-yes install dkms
+sudo apt --yes install dkms
 cd ~/repos/88x2bu-20210702
 sudo ./install-driver.sh
 
@@ -45,7 +49,7 @@ sudo ./install-driver.sh
 update-alternatives --auto vi --quiet
 
 # install and configure incron
-sudo apt --yes --force-yes install incron
+sudo apt --yes install incron
 if [ $? -need 0 ]; then
    printf "Failed: sudo apt install incron\n"
 fi
@@ -79,9 +83,9 @@ sudo systemctl disable alsa-state.service
 systemctl --user enable boomer.service
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
-sudo apt --yes --force-yes install git
-sudo apt --yes --force-yes install i2c-dev
-sudo apt --yes --force-yes install libzbar-dev libopencv-dev
+sudo apt --yes install git
+sudo apt --yes install i2c-dev
+sudo apt --yes install libzbar-dev libopencv-dev
 cd ~/repos
 git clone https://github.com/ArduCAM/MIPI_Camera.git
 cd MIPI_Camera/RPI/; make install

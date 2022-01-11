@@ -30,8 +30,11 @@ else
    #exit 1
 fi
 
+# without update, then install libopencv will fail
+sudo apt update
+
 # build & install the wifi-driver
-sudo apt install -y dkms
+sudo apt --yes --force-yes install dkms
 cd ~/repos/88x2bu-20210702
 sudo ./install-driver.sh
 
@@ -39,7 +42,7 @@ sudo ./install-driver.sh
 update-alternatives --auto vi --quiet
 
 # install and configure incron
-sudo apt install incron
+sudo apt --yes --force-yes install incron
 if [ $? -need 0 ]; then
    printf "Failed: sudo apt install incron\n"
 fi
@@ -53,23 +56,36 @@ echo "${USER}" | sudo tee -a /etc/incron.allow
 # configure incron table entries:
 incrontab ${source_dir}/incrontab_cam.txt 
 
-sudo systemctl stop bluetooth
-sudo systemctl disable bluetooth
-sudo systemctl stop avahi-daemon
-sudo systemctl disable avahi-daemon
+# disable unused services
+sudo systemctl stop bluetooth.service
+sudo systemctl disable bluetooth.service
+sudo systemctl stop avahi-daemon.service
+sudo systemctl disable avahi-daemon.service
+sudo systemctl stop dphys-swapfile.service
+sudo systemctl disable dphys-swapfile.service
+sudo systemctl stop triggerhappy.service
+sudo systemctl disable triggerhappy.service
+sudo systemctl stop hciuart.service
+sudo systemctl disable hciuart.service
+sudo systemctl stop systemd-timesyncd.service
+sudo systemctl disable systemd-timesyncd.service
 
 # need to transfer in executables and set up
 systemctl --user enable boomer.service
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
-sudo apt update
-sudo apt install git
-sudo apt install i2c-dev
-sudo apt install libzbar-dev libopencv-dev
-git clone https://github.com/ArduCAM/MIPI_Camera.git; cd MIPI_Camera/RPI/; make install
+sudo apt --yes --force-yes install git
+sudo apt --yes --force-yes install i2c-dev
+sudo apt --yes --force-yes install libzbar-dev libopencv-dev
+cd ~/repos
+git clone https://github.com/ArduCAM/MIPI_Camera.git
+cd MIPI_Camera/RPI/; make install
 
 # fix locale warning
 sudo locale-gen
 sudo update-locale en_US.UTF-8
 # sudo locale-gen --purge --no-archive 
 # sudo update-initramfs -u
+
+printf "\n  Success - the sd-card has been configured.\n"
+printf "    HOWEVER: bcam,out and the cam_params have to be loaded.\n"

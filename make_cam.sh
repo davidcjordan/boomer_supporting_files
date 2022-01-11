@@ -99,11 +99,16 @@ sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
-cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
-#disable swap
-sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+# put i2c-dev in /etc/modules file (this is usually done with raspi-config)
+# sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
+echo "i2c-dev" >> /etc/modules
 
+#TODO: delete the following if systemctl disable dphys-swapfile.service works
+#sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+
+# fix locale
 sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
 #in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
@@ -127,17 +132,15 @@ sudo -u ${user_id} mkdir -p .config/systemd/user
 sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
-sed -i "s/exit 0/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
+sed -i "s/^exit 0$/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
 
-# install the libraries needed by the cam (opencv & arducam)
-#cd /usr/lib
-#cp -p ${source_dir}/cam_libs.tar .
-#tar -xf cam_libs.tar.gz
-
-# install supporting [install] files & usb-wifi adapter driver
+# install supporting files & arducam driver
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
 sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
+# can't install arducam repository here - it's too big, since it's before the 
+#   initial boot resizes the root partition to fill the sd-card
+# install 5G usb-wifi adapter driver; it will be built with the after-boot script
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702

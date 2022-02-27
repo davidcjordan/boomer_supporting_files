@@ -74,7 +74,11 @@ echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a /etc/sudoe
 echo "${USER}" | sudo tee -a /etc/incron.allow 
 
 # configure incron table entries:
-incrontab ${source_dir}/incrontab_cam.txt 
+if [ ${is_camera} ]; then
+   incrontab ${source_dir}/incrontab_cam.txt
+else
+  incrontab ${source_dir}/incrontab_base.txt
+efi
 
 # disable unused services
 sudo systemctl stop bluetooth.service
@@ -97,20 +101,31 @@ fi
 # need to transfer in executables and set up
 systemctl --user enable boomer.service
 
-# load arducam shared library (.so), which requires opencv shared libraries installed first
+# fix locale warning
+sudo locale-gen
+sudo update-locale en_US.UTF-8
+# sudo locale-gen --purge --no-archive 
+# sudo update-initramfs -u
+
 sudo apt --yes install git
 sudo apt --yes install i2c-dev
+
+# load arducam shared library (.so), which requires opencv shared libraries installed first
 if [ ${is_camera} ]; then
    sudo apt --yes install libzbar-dev libopencv-dev
    cd ~/repos
    git clone https://github.com/ArduCAM/MIPI_Camera.git
    cd MIPI_Camera/RPI/; make install
 fi
-# fix locale warning
-sudo locale-gen
-sudo update-locale en_US.UTF-8
-# sudo locale-gen --purge --no-archive 
-# sudo update-initramfs -u
+
+if [ $(hostname) == 'base' ]; then
+   sudo apt-get install hostapd; sudo systemctl stop hostapd
+   sudo apt-get install dnsmasq; sudo systemctl stop dnsmasq
+   sudo mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig
+   sudo cp ${source_dir}/hostapd.conf /etc/hostapd
+   sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig;
+   sudo cp ${source_dir}/dnsmasq.conf /etc/dnsmasq.conf
+fi
 
 printf "\n  Success - the sd-card has been configured.\n"
 printf "    HOWEVER: bcam or bbase.out and the cam_params have to be loaded.\n"

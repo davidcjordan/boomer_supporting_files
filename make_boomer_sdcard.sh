@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script should be run as sudo, e.g. sudo bash make_cam.sh  
+# This script should be run as sudo, e.g. sudo bash make_boomer_sdcard.sh  
 #   refer to: stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912
 
 # NOTE: the following should be checked with advanced options in the raspberrypi-imager app
@@ -16,15 +16,26 @@ if [ -z $2 ]; then
  exit 1
 fi
 if [ -z $1 ]; then
- printf "arg 1 (left or right) is empty\n"
+ printf "arg 1 (left or right or base) is empty\n"
  exit 1
+fi
+
+if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ] ; then
+ printf "arg 1 is not one of 'base', 'left', or 'right'\n"
+ exit 1
+fi
+
+if [ -n $3 ]; then
+ printf "Using Tom's network addresses\n"
 fi
 
 # configure IP addresses to be used in dhcpcd.conf
 if [ -z $3 ]; then
    # normal case (using Daves enet switch)
    eth_ip_A_B_C="192.168.0."
-   if [ $1 == "left" ]; then
+   if [ $1 == "base" ]; then
+       eth_ip_D="42"
+   elif [ $1 == "left" ]; then
        eth_ip_D="43"
    else
        eth_ip_D="44"
@@ -32,16 +43,20 @@ if [ -z $3 ]; then
 else
    # testing on Tom's network
    eth_ip_A_B_C="10.0.1."
-   if [ $1 == "left" ]; then
+   if [ $1 == "base" ]; then
+       eth_ip_D="102"
+   elif [ $1 == "left" ]; then
        eth_ip_D="103"
    else
        eth_ip_D="104"
    fi
 fi
-if [ $1 == "left" ]; then
-      boom_net_ip_A_B_C_D="192.168.27.3"
+if [ $1 == "base" ]; then
+   boom_net_ip_A_B_C_D="192.168.27.2"
+elif [ $1 == "left" ]; then
+   boom_net_ip_A_B_C_D="192.168.27.3"
 else
-      boom_net_ip_A_B_C_D="192.168.27.4"
+   boom_net_ip_A_B_C_D="192.168.27.4"
 fi
 
 mount_root_dir="/media/rootfs"
@@ -100,6 +115,9 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
 cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+if [ $1 == "base" ]; then
+   cat ${source_dir}/wpa_supplicant_base.conf >> wpa_supplicant/wpa_supplicant.conf
+fi
 
 # put i2c-dev in /etc/modules file (this is usually done with raspi-config)
 # sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
@@ -128,15 +146,18 @@ sudo -u ${user_id} mkdir staged
 sudo -u ${user_id} mkdir execs
 sudo -u ${user_id} mkdir logs
 sudo -u ${user_id} mkdir script_logs
+sudo -u ${user_id} mkdir this_boomers_data #holds cam_params, other config data
 sudo -u ${user_id} ln -s ${source_dir}/scp_log.sh
 sudo -u ${user_id} ln -s ${source_dir}/change_version.sh
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
-sudo -u ${user_id} mkdir this_boomers_data #holds cam_params, shottable, other config data
 sudo -u ${user_id} mkdir -p .config/systemd/user
-sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
-
+if [ $1 == "base" ]; then
+   sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
+else 
+   sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
+fi
 # have linux delete logs on start-up:
 sed -i "s/^exit 0$/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
 
@@ -150,7 +171,7 @@ sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_f
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702
-./raspiOS-32.sh
+./ARM_RPI.sh
 
 #cd out of the mounted file system before un-mounting
 cd
@@ -172,15 +193,17 @@ else
    exit 1
 fi
 sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
-echo "" >> ${mount_boot_dir}/config.txt
-echo "#boomer" >> ${mount_boot_dir}/config.txt
-echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
-echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
-echo "start_x=1" >> ${mount_boot_dir}/config.txt
-echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt
-echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
+if [ $1 != "base" ]; then
+   echo "" >> ${mount_boot_dir}/config.txt
+   echo "#boomer" >> ${mount_boot_dir}/config.txt
+   echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
+   echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
+   echo "start_x=1" >> ${mount_boot_dir}/config.txt
+   echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt
+   echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
+fi
 
 cd
 umount ${mount_boot_dir}
 
-printf "Done with make_cam (success) >> run cam_after_boot.sh after the sdcard is booted.\n"
+printf "Done with make_boomer_sdcard (success) >> run after_boot.sh after the sdcard is booted.\n"

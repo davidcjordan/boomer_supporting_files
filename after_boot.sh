@@ -4,6 +4,19 @@
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
+if [ $(hostname) == 'left' ] || [ $(hostname) == 'right' ]; then
+   is_camera=1
+else
+   is_camera=0
+fi
+
+# if [ ${is_camera} ]; then
+#    printf "is camera\n"
+# else
+#    printf "is not camera\n"
+# fi
+# exit 0
+
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
 ssh-keygen -t rsa -f ${HOME}/.ssh/id_rsa -q -N ""
@@ -43,7 +56,7 @@ sudo modprobe i2c-dev
 # build & install the wifi-driver
 sudo apt --yes install dkms
 cd ~/repos/88x2bu-20210702
-sudo ./install-driver.sh
+sudo ./install-driver.sh NoPrompt
 
 # use vi as an editor for crontab
 update-alternatives --auto vi --quiet
@@ -74,10 +87,12 @@ sudo systemctl stop triggerhappy.service
 sudo systemctl disable triggerhappy.service
 sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
-sudo systemctl stop systemd-timesyncd.service
-sudo systemctl disable systemd-timesyncd.service
 sudo systemctl stop alsa-state.service
 sudo systemctl disable alsa-state.service
+if [ ${is_camera} ]; then
+   sudo systemctl stop systemd-timesyncd.service
+   sudo systemctl disable systemd-timesyncd.service
+fi
 
 # need to transfer in executables and set up
 systemctl --user enable boomer.service
@@ -85,11 +100,12 @@ systemctl --user enable boomer.service
 # load arducam shared library (.so), which requires opencv shared libraries installed first
 sudo apt --yes install git
 sudo apt --yes install i2c-dev
-sudo apt --yes install libzbar-dev libopencv-dev
-cd ~/repos
-git clone https://github.com/ArduCAM/MIPI_Camera.git
-cd MIPI_Camera/RPI/; make install
-
+if [ ${is_camera} ]; then
+   sudo apt --yes install libzbar-dev libopencv-dev
+   cd ~/repos
+   git clone https://github.com/ArduCAM/MIPI_Camera.git
+   cd MIPI_Camera/RPI/; make install
+fi
 # fix locale warning
 sudo locale-gen
 sudo update-locale en_US.UTF-8
@@ -97,4 +113,4 @@ sudo update-locale en_US.UTF-8
 # sudo update-initramfs -u
 
 printf "\n  Success - the sd-card has been configured.\n"
-printf "    HOWEVER: bcam,out and the cam_params have to be loaded.\n"
+printf "    HOWEVER: bcam or bbase.out and the cam_params have to be loaded.\n"

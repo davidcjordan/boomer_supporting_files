@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script should be run as sudo, e.g. sudo bash make_base.sh  
+
 # NOTE: the following should be checked with advanced options in the raspberrypi-imager app
 #   the advanced options dialog box is optained using CTRL-X
 # - enable ssh AND set pi (user) password
@@ -7,12 +9,8 @@
 # - skip first-run wizard
 # - the wifi settings dont' matter - they will get over-written
 
-if [ -z $2 ]; then
- printf "arg 2 (device, e.g. sdb or sdc) is empty\n"
- exit 1
-fi
 if [ -z $1 ]; then
- printf "arg 1 (base) is empty\n"
+ printf "arg 1 (device, e.g. sdb or sdc) is empty\n"
  exit 1
 fi
 
@@ -64,6 +62,10 @@ fi
 # change hostname
 sed -i "s/raspberrypi/${1}/g" hostname
 sed -i "s/raspberrypi/${1}/g" hosts
+#add host IPs:
+echo "192.168.27.3    left" >> hosts
+echo "192.168.27.4    right" >> hosts
+echo "192.168.0.40    daves" >> hosts
 
 if [ -e dhcpcd.conf ]; then
    mv dhcpcd.conf dhchpcd.conf-original
@@ -71,8 +73,8 @@ fi
 cp -p ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
-sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 # wlan0 connects to whatever is in wpa_supplicant
+#sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 # wlan1 is used by hostapd to generate BOOM_NET, hence it has the boom_net IP
 sed -i "s/wlan0/wlan1/g" dhcpcd.conf
 cat "    nohook wpa_supplicant" >> dhcpcd.conf
@@ -81,10 +83,13 @@ cp -p ${source_dir}/hostapd.conf .
 if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
-cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 
-#disable swap
-sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+#swap is diabled using: systemctl disable dphys-swapfile.service
+# fix locale
+sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
+#in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
+
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
@@ -96,6 +101,7 @@ sudo -u $user_id mkdir staged
 sudo -u $user_id mkdir execs
 sudo -u $user_id mkdir logs
 sudo -u $user_id mkdir script_logs
+sudo -u $user_id mkdir this_boomers_data #holds cam_params, other config data
 sudo -u $user_id ln -s ${source_dir}/scp_log.sh .
 sudo -u $user_id ln -s ${source_dir}/change_version.sh .
 sudo -u $user_id ln -s ${source_dir}/process_staged_files.sh .
@@ -103,12 +109,11 @@ sudo -u git clone https://github.com/davidcjordan/drills
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
-sudo -u $user_id mkdir this_boomers_data #holds cam_params, shottable, other config data
 sudo -u $user_id mkdir -p .config/systemd/user
 sudo -u $user_id cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
 
 # have linux delete logs on start-up:
-sed -i "s/exit 0/rm \/home\/${user_id}\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
+sed -i "s/^exit 0/rm \/home\/${user_id}\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
 
 # install usb-wifi adapter driver
 cd ${mount_root_dir}/home/${user_id}
@@ -116,8 +121,8 @@ sudo -u $user_id mkdir repos; cd repos
 sudo -u $user_id git clone https://github.com/mdavidcjordan/boomer_supporting_files
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu.git
 sudo -u $user_id git clone https://github.com/morrownr/88x2bu-20210702
-cd 88x2bu
-./raspi32.sh
+cd 88x2bu-20210702
+./raspiOS-32.sh
 # running the following has to be done when booted off the sd-card
 # sudo apt install -y dkms git
 # sudo ./install-driver.sh

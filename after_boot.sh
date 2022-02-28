@@ -10,13 +10,6 @@ else
    is_camera=0
 fi
 
-# if [ ${is_camera} ]; then
-#    printf "is camera\n"
-# else
-#    printf "is not camera\n"
-# fi
-# exit 0
-
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
 ssh-keygen -t rsa -f ${HOME}/.ssh/id_rsa -q -N ""
@@ -123,8 +116,19 @@ if [ $(hostname) == 'base' ]; then
    sudo apt-get install dnsmasq; sudo systemctl stop dnsmasq
    sudo mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig
    sudo cp ${source_dir}/hostapd.conf /etc/hostapd
-   sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig;
+   sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
    sudo cp ${source_dir}/dnsmasq.conf /etc/dnsmasq.conf
+   # install stuff for python web-server
+   python3 -m pip install flask-socketio
+   python3 -m pip install eventlet
+
+   cd ~/boomer
+   git clone https://github.com/davidcjordan/drills
+
+   cd ~/repos
+   git clone https://github.com/manningt/control_ipc_utils
+   git clone https://github.com/manningt/ui-webserver
+   ./ui-webserver/make-links.sh
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

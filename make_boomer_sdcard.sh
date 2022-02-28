@@ -15,6 +15,7 @@ if [ -z $2 ]; then
  printf "arg 2 (device, e.g. sdb or sdc) is empty\n"
  exit 1
 fi
+
 if [ -z $1 ]; then
  printf "arg 1 (left or right or base) is empty\n"
  exit 1
@@ -51,12 +52,22 @@ else
        eth_ip_D="104"
    fi
 fi
+
+daves_enet_ip_A_B_C_D="${eth_ip_A_B_C}40"
+boom_net_ip_A_B_C="192.168.27."
+base_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}2"
+left_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}3"
+right_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}4"
+spkr_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}6"
+
 if [ $1 == "base" ]; then
-   boom_net_ip_A_B_C_D="192.168.27.2"
+   my_boom_net_ip_A_B_C_D=${base_boom_net_ip_A_B_C_D}
 elif [ $1 == "left" ]; then
-   boom_net_ip_A_B_C_D="192.168.27.3"
+   my_boom_net_ip_A_B_C_D=${left_boom_net_ip_A_B_C_D}
+elif [ $1 == "right" ]; then
+   my_boom_net_ip_A_B_C_D=${right_boom_net_ip_A_B_C_D}
 else
-   boom_net_ip_A_B_C_D="192.168.27.4"
+   my_boom_net_ip_A_B_C_D=${spkr_boom_net_ip_A_B_C_D}
 fi
 
 mount_root_dir="/media/rootfs"
@@ -95,13 +106,11 @@ fi
 sed -i "s/raspberrypi/${1}/g" hostname
 sed -i "s/raspberrypi/${1}/g" hosts
 #add host IPs:
-echo "192.168.27.2    base" >> hosts
-echo "192.168.27.3    left" >> hosts
-echo "192.168.27.4    right" >> hosts
-echo "192.168.0.40    daves" >> hosts
-#echo "192.168.0.42    base" >> hosts
-#echo "192.168.0.43    left" >> hosts
-#echo "192.168.0.44    right" >> hosts
+echo "${base_boom_net_ip_A_B_C_D}    base" >> hosts
+echo "${left_boom_net_ip_A_B_C_D}    left" >> hosts
+echo "${right_boom_net_ip_A_B_C_D}    right" >> hosts
+echo "${spkr_boom_net_ip_A_B_C_D}    spkr" >> hosts
+echo "${daves_enet_ip_A_B_C_D}    daves" >> hosts
 
 if [ -e dhcpcd.conf ]; then
    mv dhcpcd.conf dhchpcd.conf-original
@@ -109,7 +118,19 @@ fi
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
-sed -i "s/my_wlan0_ip/${boom_net_ip_A_B_C_D}/g" dhcpcd.conf
+# builtin wpa is disabled on camera & spkr RPi; so configure wpa0
+# the base uses the built-in wpa0 to connect to nearby WiFi, use dhcp for wlan0
+#   and use wlan1 to host BOOM_NET
+if [ $1 == "base" ]; then
+   # remove wlan0 config in order to use dhcp
+   sed -i "s/^.*wlan0.*//g" dhcpcd.conf
+   echo "interface wlan1" >> dhcpcd.conf
+   echo "  static ip_address=${base_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
+   echo "  nohook wpa_supplicant" >> dhcpcd.conf
+else
+   sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
+fi
+
 
 if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
@@ -165,7 +186,7 @@ sed -i "s/^exit 0$/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
 sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
-# can't install arducam repository here - it's too big, since it's before the 
+# can't install arducam repository with this script - it's too big, since it's before the 
 #   initial boot resizes the root partition to fill the sd-card
 # install 5G usb-wifi adapter driver; it will be built with the after-boot script
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git

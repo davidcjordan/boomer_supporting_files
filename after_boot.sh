@@ -63,7 +63,7 @@ update-alternatives --auto vi --quiet
 
 # install and configure incron
 sudo apt --yes install incron
-if [ $? -need 0 ]; then
+if [ $? -eq 0 ]; then
    printf "Failed: sudo apt install incron\n"
 fi
 
@@ -78,7 +78,7 @@ if [ ${is_camera} ]; then
    incrontab ${source_dir}/incrontab_cam.txt
 else
   incrontab ${source_dir}/incrontab_base.txt
-efi
+fi
 
 # disable unused services
 sudo systemctl stop bluetooth.service

@@ -40,8 +40,12 @@ fi
 
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
+#enable wifi:
+sudo raspi-config nonint do_wifi_country US
+rfkill unblock wifi
+
 # without update, then install libopencv will fail
-sudo apt update
+sudo apt update && sudo apt upgrade
 
 # enable i2c (creates /dev/i2c-0 -1)
 sudo modprobe i2c-dev
@@ -67,7 +71,7 @@ echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a /etc/sudoe
 echo "${USER}" | sudo tee -a /etc/incron.allow 
 
 # configure incron table entries:
-if [ ${is_camera} ]; then
+if ${is_camera}; then
    incrontab ${source_dir}/incrontab_cam.txt
 else
   incrontab ${source_dir}/incrontab_base.txt
@@ -86,7 +90,7 @@ sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
 sudo systemctl stop alsa-state.service
 sudo systemctl disable alsa-state.service
-if [ ${is_camera} ]; then
+if ${is_camera}; then
    sudo systemctl stop systemd-timesyncd.service
    sudo systemctl disable systemd-timesyncd.service
 fi
@@ -104,7 +108,7 @@ sudo apt --yes install git
 sudo apt --yes install i2c-dev
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
-if [ ${is_camera} ]; then
+if ${is_camera}; then
    sudo apt --yes install libzbar-dev libopencv-dev
    cd ~/repos
    git clone https://github.com/ArduCAM/MIPI_Camera.git
@@ -112,8 +116,8 @@ if [ ${is_camera} ]; then
 fi
 
 if [ $(hostname) == 'base' ]; then
-   sudo apt-get install hostapd; sudo systemctl stop hostapd
-   sudo apt-get install dnsmasq; sudo systemctl stop dnsmasq
+   sudo apt --yes install hostapd; sudo systemctl stop hostapd
+   sudo apt --yes install dnsmasq; sudo systemctl stop dnsmasq
    sudo mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig
    sudo cp ${source_dir}/hostapd.conf /etc/hostapd
    sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig

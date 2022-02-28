@@ -185,7 +185,11 @@ sed -i "s/^exit 0$/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/
 # install supporting files & arducam driver
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
-sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
+
+# copying boomer_supporting_files instead of cloning to avoid authentication
+sudo -u ${user_id} cp -r ~/repos/boomer_support_files .
+# sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
+
 # can't install arducam repository with this script - it's too big, since it's before the 
 #   initial boot resizes the root partition to fill the sd-card
 # install 5G usb-wifi adapter driver; it will be built with the after-boot script

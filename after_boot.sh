@@ -4,6 +4,11 @@
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
+if [ -z "${GITHUB_TOKEN}" ]; then 
+   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
+   exit 1
+fi
+
 if [ $(hostname) == 'left' ] || [ $(hostname) == 'right' ]; then
    is_camera=1
 else
@@ -115,6 +120,7 @@ if ${is_camera}; then
    cd MIPI_Camera/RPI/; make install
 fi
 
+GITHUB_USER=davidcjordan
 if [ $(hostname) == 'base' ]; then
    sudo apt --yes install hostapd; sudo systemctl stop hostapd
    sudo apt --yes install dnsmasq; sudo systemctl stop dnsmasq
@@ -127,11 +133,11 @@ if [ $(hostname) == 'base' ]; then
    python3 -m pip install eventlet
 
    cd ~/boomer
-   git clone https://github.com/davidcjordan/drills
+   git clone https://github.com/${GITHUB_USER}/drills
 
    cd ~/repos
-   git clone https://github.com/manningt/control_ipc_utils
-   git clone https://github.com/manningt/ui-webserver
+   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
+   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    ./ui-webserver/make-links.sh
 fi
 

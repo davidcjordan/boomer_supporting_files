@@ -135,10 +135,10 @@ if [ $(hostname) == 'base' ]; then
    cd ~/boomer
    git clone https://github.com/${GITHUB_USER}/drills
 
-   cd ~/repos
-   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
-   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
-   ./ui-webserver/make-links.sh
+   # cd ~/repos
+   # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
+   # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
+   # ./ui-webserver/make-links.sh
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

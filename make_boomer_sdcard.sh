@@ -12,7 +12,10 @@
 # - the wifi settings dont' matter - they will get over-written
 
 if [ -z $2 ]; then
- printf "arg 2 (device, e.g. sdb or sdc) is empty\n"
+ printf "arg 2 (sd card, e.g. sdb or sdc) is empty\n"
+ printf "usage: sudo bash make_boomer_sdcard.sh function sdcard\n"
+ printf "       where function is one of <base, left, right> and sdcard is usually sdb or sdc, e.g.\n"
+ printf "sudo bash make_boomer_sdcard.sh left sdb\n"
  exit 1
 fi
 
@@ -24,10 +27,6 @@ fi
 if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ] ; then
  printf "arg 1 is not one of 'base', 'left', or 'right'\n"
  exit 1
-fi
-
-if [ -n $3 ]; then
- printf "Using Tom's network addresses\n"
 fi
 
 # configure IP addresses to be used in dhcpcd.conf
@@ -42,7 +41,7 @@ if [ -z $3 ]; then
        eth_ip_D="44"
    fi
 else
-   # testing on Tom's network
+   printf "Using Tom's network addresses\n"
    eth_ip_A_B_C="10.0.1."
    if [ $1 == "base" ]; then
        eth_ip_D="102"
@@ -75,7 +74,7 @@ mount_boot_dir="/media/boot"
 user_id="pi"
 source_dir="/home/${user_id}/repos/boomer_supporting_files"
 
-ping -c 3 -q github.com
+ping -c 1 -q github.com > /dev/null
 if [ $? -ne 0 ]; then
    printf "Failed: couldn't ping github (required for driver download)\n" >&2
    exit 1
@@ -187,7 +186,7 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
 
 # copying boomer_supporting_files instead of cloning to avoid authentication
-sudo -u ${user_id} cp -r ~/repos/boomer_support_files .
+sudo -u ${user_id} cp -r /home/${user_id}/repos/boomer_support_files .
 # sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
 
 # can't install arducam repository with this script - it's too big, since it's before the 

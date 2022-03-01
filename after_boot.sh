@@ -50,7 +50,7 @@ sudo raspi-config nonint do_wifi_country US
 rfkill unblock wifi
 
 # without update, then install libopencv will fail
-sudo apt update && sudo apt upgrade
+sudo apt update && sudo apt --yes upgrade
 
 # enable i2c (creates /dev/i2c-0 -1)
 sudo modprobe i2c-dev

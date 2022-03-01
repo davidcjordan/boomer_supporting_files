@@ -130,13 +130,14 @@ else
    sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 fi
 
-
 if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
-cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+
 if [ $1 == "base" ]; then
-   cat ${source_dir}/wpa_supplicant_base.conf >> wpa_supplicant/wpa_supplicant.conf
+   cp -v ${source_dir}/wpa_supplicant_base.conf >> wpa_supplicant/wpa_supplicant.conf
+else
+   cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 fi
 
 # put i2c-dev in /etc/modules file (this is usually done with raspi-config)

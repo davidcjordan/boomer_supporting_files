@@ -129,6 +129,7 @@ if [ $(hostname) == 'base' ]; then
    sudo cp ${source_dir}/hostapd.conf /etc/hostapd
    sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
    sudo cp ${source_dir}/dnsmasq.conf /etc/dnsmasq.conf
+   sudo systemctl unmask hostapd.service 
    # install stuff for python web-server
    python3 -m pip install flask-socketio
    python3 -m pip install eventlet

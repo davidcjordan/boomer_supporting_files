@@ -96,6 +96,7 @@ sudo systemctl disable hciuart.service
 sudo systemctl stop alsa-state.service
 sudo systemctl disable alsa-state.service
 if ${is_camera}; then
+   printf "disabling systemd-timesyncd.service\n"
    sudo systemctl stop systemd-timesyncd.service
    sudo systemctl disable systemd-timesyncd.service
 fi

@@ -135,7 +135,7 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
 fi
 
 if [ $1 == "base" ]; then
-   cp -v ${source_dir}/wpa_supplicant_base.conf >> wpa_supplicant/wpa_supplicant.conf
+   cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
 else
    cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 fi
@@ -187,7 +187,7 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
 
 # copying boomer_supporting_files instead of cloning to avoid authentication
-sudo -u ${user_id} cp -r /home/${user_id}/repos/boomer_support_files .
+sudo -u ${user_id} cp -r ${source_dir} .
 # sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
 
 # can't install arducam repository with this script - it's too big, since it's before the 

@@ -1,0 +1,2 @@
+   @reboot date --set="$(ssh base date +\"%Y%m%d\ %H:%M:%S\")"
+   @daily date --set="$(ssh base date +\"%Y%m%d\ %H:%M:%S\")"

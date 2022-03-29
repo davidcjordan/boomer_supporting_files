@@ -61,7 +61,8 @@ cd ~/repos/88x2bu-20210702
 sudo ./install-driver.sh NoPrompt
 
 # use vi as an editor for crontab
-update-alternatives --auto vi --quiet
+# for more info: https://askubuntu.com/questions/891928/how-can-i-add-my-desired-editor-to-the-update-alternatives-interactive-menu
+sudo update-alternatives --set editor /usr/bin/vim.tiny
 
 # install and configure incron
 sudo apt --yes install incron
@@ -69,8 +70,16 @@ if [ $? -eq 0 ]; then
    printf "Failed: sudo apt install incron\n"
 fi
 
-# allow pi to use setcap
-echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a /etc/sudoers
+# allow pi to use setcap and to set the date
+# for more info: https://www.digitalocean.com/community/tutorials/how-to-edit-the-sudoers-file
+#  and https://linux.die.net/man/5/sudoers
+scap_rule_filename="/etc/sudoers.d/011_pi-setcap"
+sudo touch ${scap_rule_filename}
+echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a ${scap_rule_filename}
+# wasn't able to have the following rule allow pi to set the date
+# so setting the date is done using the root crontab
+# refer to: https://unix.stackexchange.com/questions/78299/allow-a-specific-user-or-group-root-access-without-password-to-bin-date
+#echo "${USER} ALL=(ALL:ALL) NOPASSWD: /bin/date" | sudo tee -a /etc/sudoers
 
 #add pi as a user
 echo "${USER}" | sudo tee -a /etc/incron.allow 
@@ -141,6 +150,11 @@ if [ $(hostname) == 'base' ]; then
    # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
    # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    # ./ui-webserver/make-links.sh
+fi
+
+# load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
+if [ $(hostname) != 'base' ]; then
+   sudo crontab ${source_dir}/crontab_cam.conf
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

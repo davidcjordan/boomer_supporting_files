@@ -26,14 +26,14 @@ extension="${1##*.}"
 user_id="pi"
 dest_dir=":/home/${user_id}/boomer/logs/"
 
-if [[ $2 == "frame.dat" ]]; then
+if [ "$2" == "frame_even.dat" ] || [ "$2" == "frame_odd.dat" ]; then
   cd $1
-  ~/boomer/staged/dat2png.out $2
+  ~/boomer/execs/dat2png.out $2
   if [ $? -eq 0 ]; then
-    printf "OK: ./staged/dat2png.out $1/$2\n"
+    printf "OK: dat2png.out $1/$2\n"
     # rm "$1"
   else
-    echo "Failed: ./staged/dat2png.out $1/$2\n" >&2
+    echo "Failed: dat2png.out $1/$2\n" >&2
     exit 1
   fi
   exit 0

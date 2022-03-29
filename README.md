@@ -168,3 +168,6 @@ Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-
 
 ### Install .bash_alias file
   bash aliases provide shorthand commands for executing common operations on boomer, such as starting/stopping the base or camera and clearing the log.
+
+### Install datetime bash command to run via crontab so logging will have correct time on cams, speaker
+  sudo crontab crontab_cam.txt

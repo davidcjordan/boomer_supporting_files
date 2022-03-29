@@ -73,6 +73,7 @@ mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
 user_id="pi"
 source_dir="/home/${user_id}/repos/boomer_supporting_files"
+binaries_dir="/home/${user_id}/boomer/staged/"
 
 ping -c 1 -q github.com > /dev/null
 if [ $? -ne 0 ]; then
@@ -197,6 +198,11 @@ sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702
 ./ARM_RPI.sh
+
+if [ $1 == "left" ] || [$1 == "right"]; then
+   cp -v ${binaries}/bcam.out ${mount_root_dir}${binaries}
+   cp -v ${binaries}/dat2png.out ${mount_root_dir}${binaries}
+fi
 
 #cd out of the mounted file system before un-mounting
 cd

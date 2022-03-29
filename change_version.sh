@@ -44,10 +44,10 @@ else
 fi
 
 if [[ $2 == *"base"* ]]; then
-  LINK_PATH=${USER}/boomer/bbase.out
+  LINK_PATH="/home/${USER}/boomer/bbase.out"
 elif [[ $2 == *"cam"* ]]; then
-  LINK_PATH=${USER}/boomer/bcam.out
-elif
+  LINK_PATH="/home/${USER}/boomer/bcam.out"
+else
   printf "Error: Link to executable not created - executable name didn't contain cam or base\n"
   exit 1
 fi

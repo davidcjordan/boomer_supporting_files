@@ -171,6 +171,7 @@ sudo -u ${user_id} mkdir script_logs
 sudo -u ${user_id} mkdir this_boomers_data #holds cam_params, other config data
 sudo -u ${user_id} ln -s ${source_dir}/scp_log.sh
 sudo -u ${user_id} ln -s ${source_dir}/change_version.sh
+sudo -u ${user_id} ln -s ${source_dir}/process_staged_files.sh
 
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}

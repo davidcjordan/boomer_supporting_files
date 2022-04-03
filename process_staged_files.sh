@@ -71,7 +71,7 @@ elif [[ $2 == *"cam"* ]] || [[ $2 == *"dat2png"* ]]; then
    fi
 # copy other executables (bbase, gen_cam_params)
 elif [[ $2 == *"out"* ]]; then
-   cp -v $1/$2 ${USER}/boomer/execs/
+   cp -v $1/$2 /home/${USER}/boomer/execs/
    if [ $? -eq 0 ]
    then
       printf "Success: cp of %s to /home/pi/boomer/execs.\n" $1

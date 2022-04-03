@@ -1,0 +1,15 @@
+[Unit]
+Description=ngrok
+#After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ngrok start --all --config /home/pi/.ngrok2/ngrok.yml
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+IgnoreSIGPIPE=true
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

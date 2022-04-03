@@ -171,3 +171,22 @@ Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-
 
 ### Install datetime bash command to run via crontab so logging will have correct time on cams, speaker
   sudo crontab crontab_cam.txt
+
+### install ngrok on base
+ngrok allows ssh'ing to a base unit if it's connected to an internet accessable router (wifi or enet).
+
+To find the URL and port to use, go to the ngrok dashboard: https://dashboard.ngrok.com/cloud-edge/endpoints
+
+To install and start as a service:
+```
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm.tgz
+sudo tar xvzf ~/Downloads/ngrok-stable-linux-arm.tgz -C /usr/local/bin
+cp -p ~/repos/boomer_supporting_files/ngrok.yml ~/.ngrok2/
+cp -p ~/repos/boomer_supporting_files/ngrok.service ~/.config/systemd/user/
+#add token to ngrok.yml
+./ngrok authtoken TOKEN 
+systemctl --user unmask ngrok
+systemctl --user enable ngrok
+systemctl --user start ngrok
+systemctl --user status ngrok
+```

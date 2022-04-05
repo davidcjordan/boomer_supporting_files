@@ -142,6 +142,10 @@ if [ $(hostname) == 'base' ]; then
    # install stuff for python web-server
    python3 -m pip install flask-socketio
    python3 -m pip install eventlet
+   python3 -m pip install waitress
+   #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
+   #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
+   echo "@chromium --start-fullscreen http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
 
    cd ~/boomer
    git clone https://github.com/${GITHUB_USER}/drills

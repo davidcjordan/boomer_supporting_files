@@ -78,7 +78,9 @@ Once the file is in place (you probably have to create the .config, systemd and 
 mkdir -p ~/.config/systemd/user
 systemctl --user enable boomer.service
 ```
+There is also a base_gui.service in ~/.config/systemd/user which starts the web-server.
 
+Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart
 ### File monitoring (upgrades, log transfers)
 Refer to file Monitoring (incrontab) section in the base to install/enable incrontab
 

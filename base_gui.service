@@ -1,0 +1,11 @@
+[Unit]
+Description=Boomer User Interface web-server
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/repos/ui-webserver/app
+ExecStart=/home/pi/repos/ui-webserver/app/web-ctrl.py
+Restart=always
+
+[Install]
+WantedBy=default.target

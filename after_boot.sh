@@ -110,9 +110,6 @@ if ${is_camera}; then
    sudo systemctl disable systemd-timesyncd.service
 fi
 
-# need to transfer in executables and set up
-systemctl --user enable boomer.service
-
 # fix locale warning
 sudo locale-gen
 sudo update-locale en_US.UTF-8
@@ -145,8 +142,13 @@ if [ $(hostname) == 'base' ]; then
    python3 -m pip install waitress
    #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
    #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
-   echo "@chromium --start-fullscreen http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
+   # need to disable the 'Restore Chromium' refer to: https://raspberrypi.stackexchange.com/questions/68734/how-do-i-disable-restore-pages-chromium-didnt-shut-down-correctly-prompt#85827
+   # echo sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences
+   # echo sed -i 's/"exit_type": "Crashed"/"exit_type": "Normal"/' ~/.config/chromium/Default/Preferences
+   echo "@chromium --start-fullscreen --disable-infobars http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
 
+   # echo sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences
+   # echo sed -i 's/"exit_type": "Crashed"/"exit_type": "Normal"/' ~/.config/chromium/Default/Preferences
    cd ~/boomer
    git clone https://github.com/${GITHUB_USER}/drills
 
@@ -154,7 +156,13 @@ if [ $(hostname) == 'base' ]; then
    # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
    # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    # ./ui-webserver/make-links.sh
+
+  systemctl --user enable base_gui.service
+
 fi
+
+# need to transfer in executables
+systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
 if [ $(hostname) != 'base' ]; then

@@ -1,5 +1,6 @@
 alias bstart='systemctl --user start boomer.service'
 alias bstop='systemctl --user stop boomer.service'
+alias uistop='systemctl --user stop base_gui.service'
 alias bstat='systemctl --user status boomer.service'
 alias blog='tail -f /run/shm/boomer.log'
 alias clog='rm /run/shm/boomer.log'

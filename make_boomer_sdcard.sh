@@ -178,6 +178,7 @@ cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir -p .config/systemd/user
 if [ $1 == "base" ]; then
    sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
+   sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user/base_gui.service
 else 
    sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 fi

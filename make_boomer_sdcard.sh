@@ -225,15 +225,22 @@ else
    printf "Failed: mount /dev/${2}1 ${mount_boot_dir}\n" >&2
    exit 1
 fi
+
 sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
+echo "" >> ${mount_boot_dir}/config.txt
+echo "#boomer" >> ${mount_boot_dir}/config.txt
+
 if [ $1 != "base" ]; then
-   echo "" >> ${mount_boot_dir}/config.txt
-   echo "#boomer" >> ${mount_boot_dir}/config.txt
    echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
    echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
    echo "start_x=1" >> ${mount_boot_dir}/config.txt
    echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt
    echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
+fi
+if [ $1 == "base" ]; then
+   echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
+   echo "#mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
 fi
 
 cd

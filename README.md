@@ -84,6 +84,8 @@ Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart
 ### File monitoring (upgrades, log transfers)
 Refer to file Monitoring (incrontab) section in the base to install/enable incrontab
 
+NOTE: cannot have commented lines in incron tables (no leading #)
+
 Then use incrontab -e and add the following entries for the camera:
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@/$# > /home/pi/boomer/script_logs/scp_log.sh 2>&1

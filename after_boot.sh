@@ -143,12 +143,9 @@ if [ $(hostname) == 'base' ]; then
    #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
    #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
    # need to disable the 'Restore Chromium' refer to: https://raspberrypi.stackexchange.com/questions/68734/how-do-i-disable-restore-pages-chromium-didnt-shut-down-correctly-prompt#85827
-   # echo sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences
-   # echo sed -i 's/"exit_type": "Crashed"/"exit_type": "Normal"/' ~/.config/chromium/Default/Preferences
+   sudo chattr +i /home/pi/.config/chromium/Default/Preferences
    echo "@chromium --start-fullscreen --disable-infobars http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
 
-   # echo sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences
-   # echo sed -i 's/"exit_type": "Crashed"/"exit_type": "Normal"/' ~/.config/chromium/Default/Preferences
    cd ~/boomer
    git clone https://github.com/${GITHUB_USER}/drills
 

@@ -241,6 +241,7 @@ if [ $1 == "base" ]; then
    echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
    echo "#mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
    echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
+   echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
 fi
 
 cd

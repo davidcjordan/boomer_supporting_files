@@ -1,5 +1,5 @@
 #!/bin/bash
-#printf "process_staged_files.sh: started\n" >&2
+printf "process_staged_files.sh: started\n" >&2
 
 #the script requires /etc/hostnames to have the address for the left and right cams
 # this script runs when files are put into the boomer/staged directory on the base
@@ -85,7 +85,6 @@ if [ $is_base == 1 ]; then
          exit 1
       fi
    fi
-   exit 0
 fi
 
 # copy other executables (bbase, cam, dat2png, gen_cam_params)
@@ -130,7 +129,7 @@ if [[ $2 == *"out"* ]]; then
          printf "change_versions.sh: Failure on chmod +x for: %s\n" $1/$2 >&2
          exit 1
       fi
-      mv $1/$2 /home/${USER}/boomer/execs/
+      mv -v $1/$2 /home/${USER}/boomer/execs/
       if [ $? -eq 0 ]
       then
          printf "Success: mv of %s to /home/pi/boomer/execs.\n" $1

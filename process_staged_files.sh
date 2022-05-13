@@ -28,7 +28,7 @@ if [ $(hostname) == 'base' ]; then
 else
    is_base=0
 fi
-printf "set is_base to %d.\n" $is_base
+# printf "set is_base to %d.\n" $is_base
 
 #rsync creates temporary dot (.) files unless the -T=/run/shm is used
 if [[ $2 == "."* ]]
@@ -66,7 +66,7 @@ if [[ $2 == *"cam_param"* ]]; then
 fi
 
 # scp cam executables
-if ${is_base}; then
+if [ $is_base == 1 ]; then
    if [[ $2 == *"cam"* ]] || [[ $2 == *"dat2png"* ]]; then
       scp -pq $1/$2 left:${cam_staged_dest_dir}
       if [ $? -eq 0 ]
@@ -106,7 +106,7 @@ if [[ $2 == *"out"* ]]; then
       fi
 
       boomer_pid=$(pgrep bbase)
-      if [ $boomer_pid != '' ]; then
+      if [ $boomer_pid -ne "" ]; then
          printf "killing pid=%s\n" $boomer_pid
          sudo kill -9 $boomer_pid
       fi

@@ -3,6 +3,7 @@ Description=Run Boomer Camera
 
 [Service]
 Type=simple
+RemainAfterExit=True
 ExecStart=/home/pi/boomer/bcam.out
 WorkingDirectory=/home/pi/boomer
 RestartSec=10

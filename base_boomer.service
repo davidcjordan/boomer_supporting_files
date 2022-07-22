@@ -3,6 +3,7 @@ Description=Run Boomer Base
 
 [Service]
 Type=simple
+RemainAfterExit=True
 ExecStart=/home/pi/boomer/bbase.out
 WorkingDirectory=/home/pi/boomer
 #StandardOutput=inherit

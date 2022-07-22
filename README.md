@@ -1,7 +1,9 @@
 # boomer_supporting_files
 config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts are in this repository.
 
-There are scripts ```make_cam.sh``` and ```cam_after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
+init_resize.sh is a copy of /usr/lib/raspi-config/init_resize.sh whcih sets TARGET_END to 4GB instead of the size of the SD-card.  To make an sd-card with a small linux/root partition, over-write the normal init_resize with the edited one.
+
+There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
 - These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
   - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
   - the linux partition is sdx2

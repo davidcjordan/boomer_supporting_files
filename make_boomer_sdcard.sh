@@ -29,6 +29,12 @@ if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ] ; then
  exit 1
 fi
 
+if [ $1 == 'left' ] || [ $1 == 'right' ]; then
+   is_camera=1
+else
+   is_camera=0
+fi
+
 # configure IP addresses to be used in dhcpcd.conf
 if [ -z $3 ]; then
    # normal case (using Daves enet switch)
@@ -73,7 +79,8 @@ mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
 user_id="pi"
 source_dir="/home/${user_id}/repos/boomer_supporting_files"
-binaries_dir="/home/${user_id}/boomer/staged/"
+staged_dir="/home/${user_id}/boomer/staged/"
+execs_dir="/home/${user_id}/boomer/execs"
 
 ping -c 1 -q github.com > /dev/null
 if [ $? -ne 0 ]; then
@@ -113,7 +120,7 @@ echo "${spkr_boom_net_ip_A_B_C_D}    spkr" >> hosts
 echo "${daves_enet_ip_A_B_C_D}    daves" >> hosts
 
 if [ -e dhcpcd.conf ]; then
-   mv dhcpcd.conf dhchpcd.conf-original
+   mv -v dhcpcd.conf dhchpcd.conf-original
 fi
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
@@ -140,10 +147,19 @@ if [ $1 == "base" ]; then
 else
    cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
 fi
+if [ $? -ne 0 ]; then
+   printf "copy wpa_supplicant failed.\n"
+   exit 1
+fi
+
 
 # put i2c-dev in /etc/modules file (this is usually done with raspi-config)
 # sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
 echo "i2c-dev" >> /etc/modules
+if [ $? -ne 0 ]; then
+   printf "echo i2c-dev >> /etc/modules failed.\n"
+   exit 1
+fi
 # the following is in raspi-config, but doesn't appear to be necessary:
 # BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
 # if ! [ -e $BLACKLIST ]; then
@@ -182,8 +198,16 @@ if [ $1 == "base" ]; then
 else 
    sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 fi
+
 # have linux delete logs on start-up:
-sed -i "s/^exit 0$/rm \/home\/pi\/boomer\/logs\/*\n\nexit 0/" ${mount_root_dir}/etc/rc.local
+sed -i "s/^exit 0$/#exit 0\n/" ${mount_root_dir}/etc/rc.local
+echo "rm -f \/home\/pi\/boomer\/logs\/*" >> ${mount_root_dir}/etc/rc.local
+# turn on performance mode for the governor
+echo "echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor" >> ${mount_root_dir}/etc/rc.local
+# turn on the pulse generator (only needs to be done for Tom's home setup using the RPi pulse)
+echo "cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period;" >> ${mount_root_dir}/etc/rc.local
+echo "echo 8000000 > duty_cycle; echo 1 > enable" >> ${mount_root_dir}/etc/rc.local
+echo "exit 0" >> ${mount_root_dir}/etc/rc.local
 
 # install supporting files & arducam driver
 cd ${mount_root_dir}/home/${user_id}
@@ -201,15 +225,14 @@ sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 cd 88x2bu-20210702
 ./ARM_RPI.sh
 
-if [ $1 == "left" ] || [$1 == "right"]; then
-   cp -v ${binaries}/bcam.out ${mount_root_dir}${binaries}
-   cp -v ${binaries}/dat2png.out ${mount_root_dir}${binaries}
+if [ $is_camera -eq 1 ]; then
+   cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
+   cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
 fi
 
 #cd out of the mounted file system before un-mounting
 cd
 umount ${mount_root_dir}
-
 
 #/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
 if [ ! -d ${mount_boot_dir} ]; then
@@ -231,7 +254,7 @@ echo "" >> ${mount_boot_dir}/config.txt
 echo "#boomer" >> ${mount_boot_dir}/config.txt
 
 if [ $1 != "base" ]; then
-   echo "dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
+   echo "#dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
    echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
    echo "start_x=1" >> ${mount_boot_dir}/config.txt
    echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt

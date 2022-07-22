@@ -85,7 +85,8 @@ echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a ${scap_rul
 echo "${USER}" | sudo tee -a /etc/incron.allow 
 
 # configure incron table entries:
-if ${is_camera}; then
+if [ $is_camera -eq 1 ]; then
+# if ${is_camera}; then
    incrontab ${source_dir}/incrontab_cam.txt
 else
   incrontab ${source_dir}/incrontab_base.txt
@@ -117,14 +118,22 @@ sudo update-locale en_US.UTF-8
 # sudo update-initramfs -u
 
 sudo apt --yes install git
-sudo apt --yes install i2c-dev
+#sudo apt --yes install i2c-dev
+sudo apt --yes install i2c-tools
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
-if ${is_camera}; then
+if [ $is_camera -eq 1 ]; then
    sudo apt --yes install libzbar-dev libopencv-dev
    cd ~/repos
    git clone https://github.com/ArduCAM/MIPI_Camera.git
    cd MIPI_Camera/RPI/; make install
+fi
+
+#the following is required to have the base/cam service start when not logged in
+loginctl enable-linger pi
+if [ $? -ne 0 ]; then
+   printf "enable-linger failed.\n"
+   exit 1
 fi
 
 GITHUB_USER=davidcjordan
@@ -150,21 +159,20 @@ if [ $(hostname) == 'base' ]; then
    cd ~/boomer
    git clone https://github.com/${GITHUB_USER}/drills
 
-   # cd ~/repos
-   # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
-   # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
-   # ./ui-webserver/make-links.sh
+   cd ~/repos
+   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
+   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
+   ./ui-webserver/make-links.sh
 
   systemctl --user enable base_gui.service
-
 fi
 
 # need to transfer in executables
 systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
-if [ $(hostname) != 'base' ]; then
-   sudo crontab ${source_dir}/crontab_cam.conf
+if [ $is_camera -eq 1 ]; then
+   sudo crontab ${source_dir}/crontab_cam.txt
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

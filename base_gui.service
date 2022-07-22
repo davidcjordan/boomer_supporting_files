@@ -3,6 +3,7 @@ Description=Boomer User Interface web-server
 
 [Service]
 Type=simple
+RemainAfterExit=True
 WorkingDirectory=/home/pi/repos/ui-webserver/app
 ExecStart=/home/pi/repos/ui-webserver/app/web-ctrl.py
 Restart=always

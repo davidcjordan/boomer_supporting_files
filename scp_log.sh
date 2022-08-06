@@ -1,15 +1,9 @@
 #!/bin/bash
 
-# if enet is up:
-  # if a rec_*dat || rec_*log file then transfer to daves
-# else
-  # if rec_log && !base then transfer to base
-# endif -> i.e. do nothing if not a log file or video file
-
 # this script assumes that 'base' and 'daves' IP addresses are setup in hostnames;
 #   and that the ssh keys have been copied to base and daves
 
-printf "scp_logs.sh: started\n" >&2
+printf "scp_logs.sh started: arg1=$1 arg2=$2\n" >&2
 if [ -z $1 ]
 then
  printf "arg 1 (path to file) is empty\n"
@@ -22,64 +16,78 @@ then
  exit 1
 fi
 
-extension="${1##*.}"
-user_id="pi"
-dest_dir=":/home/${user_id}/boomer/logs/"
+extension="${2##*.}"
+# printf "file extension: $extension\n"
+if [ "$2" == "*boomer.log" ] || [ $extension == "fifo" ] || [ $extension == "png" ]; then
+ printf "skipping handling of file: $2\n"
+ exit 0
+fi
 
+# on camera: convert frame data to PNG files
 if [ "$2" == "frame_even.dat" ] || [ "$2" == "frame_odd.dat" ]; then
   cd $1
   ~/boomer/execs/dat2png.out $2
   if [ $? -eq 0 ]; then
     printf "OK: dat2png.out $1/$2\n"
-    # rm "$1"
   else
-    echo "Failed: dat2png.out $1/$2\n" >&2
+    printf "Failed: dat2png.out $1/$2\n" >&2
     exit 1
   fi
   exit 0
 fi
 
-if [[ $2 != "rec_"* ]]; then
-  printf "Skipping file: $1/$2\n"
-  exit 0
-fi
-
-if [[ $(hostname) == "base" ]]; then
-  is_base="true"
-else
-  is_base="false"
-fi
-#printf "is_base: $is_base\n"
+user_id="pi"
+log_dir=":/home/${user_id}/boomer/logs/"
+shm_dir=":/run/shm"
 
 eth_state=$(cat /sys/class/net/eth0/operstate)
-if [[ $eth_state == "up" ]]; then
-  is_eth_up="true"
-else
-  is_eth_up="false"
-fi
-# printf "is_eth_up: $is_eth_up\n"
 
-dest_ip="false"
-if "$is_eth_up"; then
-  dest_ip="daves"
-else
-  if "$is_base"; then
-    printf "Not sending logs because enet is not plugged into base\n"
-  elif [[ $extension == "dat" ]]; then
-    printf "Not sending video because enet is not plugged into the cam\n"
+if [ $(hostname) == "base" ]; then
+  if [ $eth_state == "up" ]; then
+    dest_ip="daves"
+    dest="${user_id}@${dest_ip}${log_dir}"
+    scp "$1/$2" $dest
+    if [ $? -eq 0 ]; then
+      printf "OK: scp $1/$2 $dest\n"
+      rm -v "$1/$2"
+    else
+      printf "Failed: scp $1/$2 $dest\n" >&2
+      exit 1
+    fi
   else
-    dest_ip="base"
+    # if enet not up, then move shm files to the log directory
+    if [ "$1" == "/run/shm" ]; then
+      mv -v "$1/$2" $log_dir
+      if [ $? -eq 0 ]; then
+        printf "OK: mv $1/$2 $log_dir\n"
+      else
+        printf "Failed: mv $1/$2 $log_dir\n" >&2
+        exit 1
+      fi
+    fi
   fi
-fi
-
-if [ "$dest_ip" != "false" ] ; then
-  dest="${user_id}@${dest_ip}${dest_dir}"
+else
+  # camera or speaker files:
+  dest_ip="base"
+  dest="${user_id}@${dest_ip}${shm_dir}"
+  # the following delays didn't seem to work - so adding the delays in the cam code instead
+  # if [ "$1" == "/run/shm" ] && [ $extension == "dat" ]; then
+  #   printf "Adding sleep before sending video file."
+  #   if [ $(hostname) == "right" ]; then
+  #     printf "Adding sleep for right camera."
+  #     # wait for left to transfer the video
+  #     sleep 49
+  #   else
+  #     printf "Adding sleep for left camera."
+  #     sleep 3 # wait for .log files to be transferred
+  #   fi
+  # fi
   scp "$1/$2" $dest
   if [ $? -eq 0 ]; then
     printf "OK: scp $1/$2 $dest\n"
-    # rm "$1"
+    rm -v "$1/$2"
   else
-    echo "Failed: scp $1/$2 $dest\n" >&2
+    printf "Failed: scp $1/$2 $dest\n" >&2
     exit 1
   fi
 fi

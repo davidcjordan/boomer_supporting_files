@@ -37,7 +37,7 @@ incrontab has to be installed and enabled:
 sudo apt-get install incron;
 sudo vi /etc/incron.allow       #add pi as a user
 ```
-The incron table can be loaded with ```incrontab ~/repos/boomer_supporting_files/incrontab_base.txt ``` or use incrontab -e and add the following entries for the base: The 1st copies logs to a computer for analysis; the 2nd copies cam executables to the cameras for a software update.  Note: the long text lines are difficult to edit in nano.  You can use ```sudo update-alternatives --config editor``` to change the editor to vi.
+The incron table can be loaded with ```incrontab ~/repos/boomer_supporting_files/incrontab.txt ``` or use incrontab -e and add the following entries for the base: The 1st copies logs to a computer for analysis; the 2nd copies cam executables to the cameras for a software update.  Note: the long text lines are difficult to edit in nano.  You can use ```sudo update-alternatives --config editor``` to change the editor to vi.
 ```
 /home/pi/boomer/logs    IN_CLOSE_WRITE  /home/pi/boomer/scp_log.sh $@/$#
 /home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@ $# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
@@ -84,16 +84,9 @@ There is also a base_gui.service in ~/.config/systemd/user which starts the web-
 
 Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart
 ### File monitoring (upgrades, log transfers)
-Refer to file Monitoring (incrontab) section in the base to install/enable incrontab
+incrontab is used to move executables to the camera/speaker and to move logs to the base and then to an attached computer.
 
-NOTE: cannot have commented lines in incron tables (no leading #)
 
-Then use incrontab -e and add the following entries for the camera:
-```
-/home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@/$# > /home/pi/boomer/script_logs/scp_log.sh 2>&1
-/home/pi/boomer/staged  IN_CLOSE_WRITE   rm /home/pi/boomer/execs/$#; cp $@/$# /home/pi/boomer/execs
-/home/pi/boomer/execs   IN_CLOSE_WRITE   /home/pi/boomer/change_version.sh $@/$# > /home/pi/boomer/script_logs/change_version.log 2>&1
-```
 ### Install arducam libraries:
 arducam libraries have a dependency on opencv, so that has to be installed (first line below)
 The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_Camera/tree/master/RPI

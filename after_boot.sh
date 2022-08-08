@@ -85,12 +85,7 @@ echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a ${scap_rul
 echo "${USER}" | sudo tee -a /etc/incron.allow 
 
 # configure incron table entries:
-if [ $is_camera -eq 1 ]; then
-# if ${is_camera}; then
-   incrontab ${source_dir}/incrontab_cam.txt
-else
-  incrontab ${source_dir}/incrontab_base.txt
-fi
+incrontab ${source_dir}/incrontab.txt
 
 # disable unused services
 sudo systemctl stop bluetooth.service

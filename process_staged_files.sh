@@ -2,10 +2,11 @@
 printf "process_staged_files.sh: started\n" >&2
 
 #the script requires /etc/hostnames to have the address for the left and right cams
-# this script runs when files are put into the boomer/staged directory on the base
-# this script only runs on the base; refer to the incrontab_base
+# this script runs when files are put into the boomer/staged directory
+# it is invoked by incrontab
 # on the cam, the .out files are copied from the staged dir to the exec dir
 #  after the mv, the change_version.sh script runs to do the setcap
+# on the base, camera (or speaker) executables are scp'd to the cameras
 
 cfg_data_dest_dir="${HOME}/boomer/this_boomers_data"
 cam_staged_dest_dir="${HOME}/boomer/staged"
@@ -37,7 +38,7 @@ then
    exit 0
 fi
 
-# handle cam parameter files
+# handle cam parameter files (this code is no longer necessary, since the cams don't use the param files)
 if [[ $2 == *"cam_param"* ]]; then
    if [[ $2 != *"new" ]]; then
       printf "Skipping cam_param filename: ${2}\n" >&2

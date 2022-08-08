@@ -18,7 +18,7 @@ fi
 
 extension="${2##*.}"
 # printf "file extension: $extension\n"
-if [ "$2" == "*boomer.log" ] || [ $extension == "fifo" ] || [ $extension == "png" ]; then
+if [[ $2 == *"boomer.log"* ]] || [ $extension == "fifo" ] || [ $extension == "png" ]; then
  printf "skipping handling of file: $2\n"
  exit 0
 fi
@@ -37,15 +37,15 @@ if [ "$2" == "frame_even.dat" ] || [ "$2" == "frame_odd.dat" ]; then
 fi
 
 user_id="pi"
-log_dir=":/home/${user_id}/boomer/logs/"
-shm_dir=":/run/shm"
+log_dir="/home/${user_id}/boomer/logs/"
+shm_dir="/run/shm"
 
 eth_state=$(cat /sys/class/net/eth0/operstate)
 
 if [ $(hostname) == "base" ]; then
   if [ $eth_state == "up" ]; then
     dest_ip="daves"
-    dest="${user_id}@${dest_ip}${log_dir}"
+    dest="${user_id}@${dest_ip}:${log_dir}"
     scp "$1/$2" $dest
     if [ $? -eq 0 ]; then
       printf "OK: scp $1/$2 $dest\n"
@@ -56,7 +56,7 @@ if [ $(hostname) == "base" ]; then
     fi
   else
     # if enet not up, then move shm files to the log directory
-    if [ "$1" == "/run/shm" ]; then
+    if [ $1 == $shm_dir ]; then
       mv -v "$1/$2" $log_dir
       if [ $? -eq 0 ]; then
         printf "OK: mv $1/$2 $log_dir\n"
@@ -69,7 +69,7 @@ if [ $(hostname) == "base" ]; then
 else
   # camera or speaker files:
   dest_ip="base"
-  dest="${user_id}@${dest_ip}${shm_dir}"
+  dest="${user_id}@${dest_ip}:${shm_dir}"
   # the following delays didn't seem to work - so adding the delays in the cam code instead
   # if [ "$1" == "/run/shm" ] && [ $extension == "dat" ]; then
   #   printf "Adding sleep before sending video file."

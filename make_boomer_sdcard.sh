@@ -178,6 +178,7 @@ sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} ln -s ${source_dir}/.bash_aliases
 sudo -u ${user_id} mkdir .ssh
+sudo -u ${user_id} ln -s ${source_dir}/ssh_config.txt .ssh/config
 sudo -u ${user_id} mkdir boomer
 cd boomer
 sudo -u ${user_id} mkdir staged
@@ -226,8 +227,8 @@ cd 88x2bu-20210702
 ./ARM_RPI.sh
 
 if [ $is_camera -eq 1 ]; then
-   cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
-   cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
 fi
 
 #cd out of the mounted file system before un-mounting

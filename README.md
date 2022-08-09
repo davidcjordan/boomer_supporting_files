@@ -12,38 +12,30 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
     - ssh enabled, enable WiFi to set country code and temporary SID, locale settings
     - these settings can be saved and used on multiple runs if the imager
   - ! the scripts should be run as sudo, like this: ```sudo bash make_cam.sh```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
-- Similarly, there are ```make_base.sh``` and ```base_after_boot.sh```
-- What the scripts perform is described below - although the scripts are a more accurate reference.
-## Base configuration
-### Networking config:
-- /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
-- /etc/hostapd.conf: sets 2.4 or 5G - here is a reference conf file: https://gist.github.com/renaudcerrato/db053d96991aba152cc17d71e7e0f63c
-- wpa_supplicant.conf:  add user provided wifi credentials if there is a public network
-- /etc/hosts has the IP addresses for left, right, base and the supporting RPi (Daves)
 
-### systemd (launching processes on boot and restarting on failure
-A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bbase.
-Once the file is in place (you probably have to create the .config, systemd and user directories) then:
-```
-mkdir -p ~/.config/systemd/user
-systemd --user enable boomer.service
-```
 
-### File monitoring (upgrades, log transfers)
-A facility, incrontab, is used to monitor directories for new files and call a script or do some other action.
+## Notes:
+Here is the timing of making an SD-card with the scripts:
+* imager: about 10 minutes, but it requires typing in a password
+* make_boomer_sdcard: less than a minute
+* after_boomer.sh takes about 10-30 minutes.  Most of the time is installing opencv
 
-incrontab has to be installed and enabled:
+Making an SD card using the scripts:
+* Advantages:
+  * you know what exactly is being installed or configured
+  * it takes less time than copying/cloning a 16 or 32 GB card
+* Disadvantages:
+  * requires multiple steps and checking for errors
+
+Making an SD card by copying a 4GB SD card (or using a small image) takes ?? minutes and is simpler.
+
+The default when booting an freshly created image is for the OS to resize the root partition (/) to use the whole SD card.  To disable this and have the root partition be 4GB, do the following after making the image and mounting the root directory (but before booting the SD-card):
 ```
-sudo apt-get install incron;
-sudo vi /etc/incron.allow       #add pi as a user
+cp -v ~/repos/boomer_supporting_files/init_resize.sh /media/rootfs/usr/lib/raspi-config
 ```
-The incron table can be loaded with ```incrontab ~/repos/boomer_supporting_files/incrontab.txt ``` or use incrontab -e and add the following entries for the base: The 1st copies logs to a computer for analysis; the 2nd copies cam executables to the cameras for a software update.  Note: the long text lines are difficult to edit in nano.  You can use ```sudo update-alternatives --config editor``` to change the editor to vi.
-```
-/home/pi/boomer/logs    IN_CLOSE_WRITE  /home/pi/boomer/scp_log.sh $@/$#
-/home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/boomer/scp_cam_executables.sh $@ $# > /home/pi/boomer/script_logs/scp_cam_executables.log 2>&1
-/home/pi/boomer/execs   IN_CLOSE_WRITE  /home/pi/boomer/change_version.sh $@ $# > /home/pi/boomer/script_logs/change_version.log 2>&1
-```
-### Directory structure:
+After the SD-card is booted, and the after_boot.sh script is run, you should have a 4GB SD-card (or image) that can be copied.
+
+## Directory structure:
 ```
 pi@base:~/boomer $ ls -al
 total 116
@@ -62,31 +54,88 @@ drwxr-xr-x  2 pi pi  4096 Jun 25 06:58 staged
 ```
 On the base RPi, there is an additional directory ```drills``` which is cloned from: https://github.com/davidcjordan/drills
 
-On the speaker RPi, there is an additional directory ```audo``` which is cloned from: https://github.com/davidcjordan/audio
+On the speaker RPi, there is an additional directory ```audio``` which is cloned from: https://github.com/davidcjordan/audio
 
 A directory in the home directory ```this_boomers_data``` is also created - it holds machine specific files such as cam_parameters, ball throwing configuration (shot table), and other config files.  It will contain files used by the User Interface to display the boomer ID, e.g. Boomer #3, etc.
 
-## Camera configuration
+## systemd (launching processes on boot and restarting on failure
+A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bbase.
+Once the file is in place (you probably have to create the .config, systemd and user directories) then:
+```
+mkdir -p ~/.config/systemd/user
+systemd --user enable boomer.service
+```
+On the base: There is a base_gui.service in ~/.config/systemd/user which starts the web-server.
 
+## File monitoring (upgrades, log transfers)
+A facility, incrontab, is used to monitor directories for new files and call a script or do some other action.
+
+incrontab has to be installed and enabled:
+```
+sudo apt-get install incron;
+sudo vi /etc/incron.allow       #add pi as a user
+```
+The incron table can be loaded with ```incrontab ~/repos/boomer_supporting_files/incrontab.txt ``` or use incrontab -e
+Note: the long text lines are difficult to edit in nano.  You can use ```sudo update-alternatives --config editor``` to change the editor to vi.
+
+Refer to the incrontab.txt file for specifics.  But basically there are 3 directory watchers:
+* logs directory: to an external support computer; currently uses enet
+  * performed by scp_logs.sh
+  * for the cams - it transfers the files to base
+  * for the base - it transfers to an external computer, of connected; otherwise it moves them to logs
+* /run/shm directory
+  * same as the logs directory
+* staged directory 
+  * performed by process_staged_files.sh & change_version.sh
+  * scp executables to cameras & speaker staged, and/or move them to the execs directory
+  * sets the executables capabilities and mode
+
+## Security Config (ssh)
+There is a ~/.ssh directory which holds keys, ssh config, and known_hosts
+ssh host key checking is disabled on BOOM_NET; refer to the .ssh/config file and https://www.shellhacks.com/disable-ssh-host-key-checking/
+
+### Installing keys for ssh & scp
+The keys are required for transferring (scp'ing) files between computers which is used for software upgrades; it avoids the request to enter passwords.
+```
+#Create a key on computer that will be accessing the RPi: 
+cd ~/.ssh  #keys are stored in this directory
+echo "Hit ‘enter’ for both passphrase questions when running keygen (no passphrase)"
+ssh-keygen -t rsa  #create the key
+```
+
+Copy the generated key file from your computer to the RPi to be accessed with ssh/scp:
+```
+ssh-copy-id left (or right or daves)
+```
+
+Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/ or: https://alvinalexander.com/linux-unix/how-use-scp-without-password-backups-copy/
+
+
+## Base configuration
+### Networking config:
+- /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
+- /etc/hostapd.conf: sets 2.4 or 5G - here is a reference conf file: https://gist.github.com/renaudcerrato/db053d96991aba152cc17d71e7e0f63c
+- wpa_supplicant_base.conf:  add user provided wifi credentials if there is a public network
+- /etc/hosts has the IP addresses for left, right, base and the supporting RPi (Daves)
+
+## Camera configuration
 ### Networking config:
 - /boot/config.txt:  add the following 2 lines: ```dtparam=i2c_vc=on   &    dtoverlay=disable-wifi```
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for BOOM_NET (wlan0 is disabled in /boot/config.txt)
 - wpa_supplicant.conf:  the file should contain BOOM_NET and it's password.
 
-### systemd (launching processes on boot and restarting on failure
-A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bcam.
-Once the file is in place (you probably have to create the .config, systemd and user directories) then:
-```
-mkdir -p ~/.config/systemd/user
-systemctl --user enable boomer.service
-```
-There is also a base_gui.service in ~/.config/systemd/user which starts the web-server.
+### UI config
+In addition to launching the web-ui using systemd (described previously):
 
-Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart
-### File monitoring (upgrades, log transfers)
-incrontab is used to move executables to the camera/speaker and to move logs to the base and then to an attached computer.
+Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart:
+* it is launched in full-screen mode
+* !TOBE DONE: disable 'hover' input from the touch-screen
+* use pkill -o chromium to stop it
+* an external mouse messes up the touchscreen input
+* an external keyboard allows the operator to hit 'F11' to exit full screen mode
 
-
+## Additional details
+The following sections describe what the scripts now do and are for reference only
 ### Install arducam libraries:
 arducam libraries have a dependency on opencv, so that has to be installed (first line below)
 The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_Camera/tree/master/RPI
@@ -142,28 +191,6 @@ sudo visudo
 add the following line:
 pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
 ```
-### Installing keys for ssh & scp (instead of using passwords)
-The keys are required for transferring (scp'ing) files between computers which is used for software upgrades.
-The keys make it so passwords are not required for scp and ssh.
-```
-#Create a key on computer that will be accessing the RPi: 
-cd ~/.ssh  #keys are stored in this directory
-echo "Hit ‘enter’ for both passphrase questions when running keygen (no passphrase)"
-ssh-keygen -t rsa  #create the key
-#Copy the generated key file from your computer to the RPi to be accessed with ssh/scp:
-scp ~/.ssh/id_rsa.pub pi@base:/home/pi/.ssh
-#
-#Append the key onto the destination RPi
-#ssh to the RPi - using the password for this time
-#cd .ssh
-#cat id_rsa.pub >> authorized_keys
-```
-Test the key installation:
-Type ‘exit’ to terminate the ssh session
-Type ssh pi@<ip name or addr>
-It should not ask for a password
-
-Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/ or: https://alvinalexander.com/linux-unix/how-use-scp-without-password-backups-copy/
 
 ### Install .bash_alias file
   bash aliases provide shorthand commands for executing common operations on boomer, such as starting/stopping the base or camera and clearing the log.

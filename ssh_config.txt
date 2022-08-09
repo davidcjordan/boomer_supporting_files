@@ -1,0 +1,13 @@
+Host 192.168.27.*
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+Host daves
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+# the following is in case using a hostname didn't work:
+Host 192.168.0.40
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+

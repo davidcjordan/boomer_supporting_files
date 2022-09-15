@@ -101,7 +101,7 @@ if [[ $2 == *"out"* ]]; then
       then
          printf "boomer service stopped.\n"
       else
-         printf "process_staged_files.sh: Failure on boomer.service stop.\n"  >&2
+         printf "Failure on boomer.service stop.\n"  >&2
          exit 1
       fi
 
@@ -117,7 +117,7 @@ if [[ $2 == *"out"* ]]; then
       then
          printf "priority capabilities set on: %s\n" $1/$2
       else
-         printf "change_versions.sh: Failure on setcap 'cap_sys_nice=eip for: %s\n" $1/$2 >&2
+         printf "Failed: setcap 'cap_sys_nice=eip for: %s\n" $1/$2 >&2
          exit 1
       fi
 
@@ -127,7 +127,7 @@ if [[ $2 == *"out"* ]]; then
       then
          printf "+x set on: %s\n" $1/$2
       else
-         printf "change_versions.sh: Failure on chmod +x for: %s\n" $1/$2 >&2
+         printf "Failed: chmod +x for: %s\n" $1/$2 >&2
          exit 1
       fi
       mv -v $1/$2 /home/${USER}/boomer/execs/
@@ -146,7 +146,7 @@ if [[ $2 == *"out"* ]]; then
          printf "boomer service started.\n"
          exit 0
       else
-         printf "process_staged_files.sh: Failure on boomer.service start.\n"  >&2
+         printf "Failure on boomer.service start.\n"  >&2
          exit 1
       fi
    fi

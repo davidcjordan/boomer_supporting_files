@@ -14,18 +14,18 @@
 if [ -z $2 ]; then
  printf "arg 2 (sd card, e.g. sdb or sdc) is empty\n"
  printf "usage: sudo bash make_boomer_sdcard.sh function sdcard\n"
- printf "       where function is one of <base, left, right> and sdcard is usually sdb or sdc, e.g.\n"
+ printf "       where function is one of <base, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
  printf "sudo bash make_boomer_sdcard.sh left sdb\n"
  exit 1
 fi
 
 if [ -z $1 ]; then
- printf "arg 1 (left or right or base) is empty\n"
+ printf "arg 1 (left or right or base or spkr) is empty\n"
  exit 1
 fi
 
-if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ] ; then
- printf "arg 1 is not one of 'base', 'left', or 'right'\n"
+if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ]  &&  [ $1 != "spkr" ]; then
+ printf "arg 1 is not one of 'base', 'left','right' or 'spkr' \n"
  exit 1
 fi
 
@@ -43,8 +43,10 @@ if [ -z $3 ]; then
        eth_ip_D="42"
    elif [ $1 == "left" ]; then
        eth_ip_D="43"
-   else
+   elif [ $1 == "right" ]; then
        eth_ip_D="44"
+   else
+       eth_ip_D="46"
    fi
 else
    printf "Using Tom's network addresses\n"
@@ -53,8 +55,10 @@ else
        eth_ip_D="102"
    elif [ $1 == "left" ]; then
        eth_ip_D="103"
-   else
+   elif [ $1 == "right" ]; then
        eth_ip_D="104"
+   else
+       eth_ip_D="106"
    fi
 fi
 
@@ -193,6 +197,7 @@ sudo -u ${user_id} ln -s ${source_dir}/process_staged_files.sh
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir -p .config/systemd/user
+# TODO: make a generic boomer.service and do sed's to change the executable
 if [ $1 == "base" ]; then
    sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
    sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user/base_gui.service
@@ -206,8 +211,10 @@ echo "rm -f \/home\/pi\/boomer\/logs\/*" >> ${mount_root_dir}/etc/rc.local
 # turn on performance mode for the governor
 echo "echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor" >> ${mount_root_dir}/etc/rc.local
 # turn on the pulse generator (only needs to be done for Tom's home setup using the RPi pulse)
-echo "cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period;" >> ${mount_root_dir}/etc/rc.local
-echo "echo 8000000 > duty_cycle; echo 1 > enable" >> ${mount_root_dir}/etc/rc.local
+if [ $is_camera -eq 1 ]; then
+   echo "cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period;" >> ${mount_root_dir}/etc/rc.local
+   echo "echo 8000000 > duty_cycle; echo 1 > enable" >> ${mount_root_dir}/etc/rc.local
+fi
 echo "exit 0" >> ${mount_root_dir}/etc/rc.local
 
 # install supporting files & arducam driver
@@ -254,7 +261,7 @@ sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
 echo "" >> ${mount_boot_dir}/config.txt
 echo "#boomer" >> ${mount_boot_dir}/config.txt
 
-if [ $1 != "base" ]; then
+if [ $is_camera -eq 1 ]; then
    echo "#dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
    echo "dtparam=i2c_vc=on" >> ${mount_boot_dir}/config.txt
    echo "start_x=1" >> ${mount_boot_dir}/config.txt
@@ -262,10 +269,23 @@ if [ $1 != "base" ]; then
    echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
 fi
 if [ $1 == "base" ]; then
-   echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
-   echo "#mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
-   echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
-   echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
+   # the following is per https://forums.raspberrypi.com/viewtopic.php?t=299193
+   # to force hdmi 0 & 1 plugs
+   echo "#hdmi_mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
+
+   echo "hdmi_ignore_edid:0=0xa5000080" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_group:0=2" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
+
+   echo "hdmi_ignore_edid:1=0xa5000080" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_force_hotplug:1=1" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_group:1=2" >> ${mount_boot_dir}/config.txt
+   echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
+
+   # echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
+   # echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
+   # echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
 fi
 
 cd

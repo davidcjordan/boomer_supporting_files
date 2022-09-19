@@ -20,3 +20,6 @@ alias pulse21='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pw
 
 alias getpngs='scp left:/run/shm/frame_even.png /home/pi/boomer/logs/left_frame_even.png; scp left:/run/shm/frame_odd.png /home/pi/boomer/logs/left_frame_odd.png;scp right:/run/shm/frame_even.png /home/pi/boomer/logs/right_frame_even.png;scp right:/run/shm/frame_odd.png /home/pi/boomer/logs/right_frame_odd.png'
 alias getdats='scp left:/run/shm/frame_even.dat /home/pi/boomer/logs/left_frame_even.dat; scp left:/run/shm/frame_odd.dat /home/pi/boomer/logs/left_frame_odd.dat;scp right:/run/shm/frame_even.dat /home/pi/boomer/logs/right_frame_even.dat;scp right:/run/shm/frame_odd.dat /home/pi/boomer/logs/right_frame_odd.dat'
+
+alias stopall='ssh left systemctl --user stop boomer.service; ssh right systemctl --user stop boomer.service; ssh spkr systemctl --user stop boomer.service; systemctl --user stop boomer.service; pkill -o chromium; systemctl --user stop base_gui.service'
+alias haltall='ssh left sudo halt; ssh right sudo halt; ssh spkr sudo halt; sudo halt'

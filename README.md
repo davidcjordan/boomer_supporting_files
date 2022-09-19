@@ -11,7 +11,7 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
   - ! The rpi-imager advanced options need to be set using CTRL-SHIFT-x:    [reference](https://www.easyprogramming.net/raspberrypi/raspberry_pi_imager_advanced_options.php)
     - ssh enabled, enable WiFi to set country code and temporary SID, locale settings
     - these settings can be saved and used on multiple runs if the imager
-  - ! the scripts should be run as sudo, like this: ```sudo bash make_cam.sh```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
+  - ! the scripts should be run as sudo, like this: ```sudo bash make_boomer_sdcard.sh base sdb```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 
 
 ## Notes:

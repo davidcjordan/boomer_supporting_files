@@ -9,7 +9,7 @@ printf "process_staged_files.sh: started\n" >&2
 # on the base, camera (or speaker) executables are scp'd to the cameras
 
 cfg_data_dest_dir="${HOME}/boomer/this_boomers_data"
-cam_staged_dest_dir="${HOME}/boomer/staged"
+staged_dest_dir="${HOME}/boomer/staged"
 cam=""
 
 if [ -z $1 ]
@@ -66,17 +66,17 @@ if [[ $2 == *"cam_param"* ]]; then
    exit 0
 fi
 
-# scp cam executables
+# scp cam, spkr executables
 if [ $is_base == 1 ]; then
    if [[ $2 == *"cam"* ]] || [[ $2 == *"dat2png"* ]]; then
-      scp -pq $1/$2 left:${cam_staged_dest_dir}
+      scp -pq $1/$2 left:${staged_dest_dir}
       if [ $? -eq 0 ]
       then
          printf "Success: scp of ${2} to the left camera.\n"
       else
          printf "Failed: scp of ${2} to the left camera.\n" >&2
       fi
-      scp -pq $1/$2 right:${cam_staged_dest_dir}
+      scp -pq $1/$2 right:${staged_dest_dir}
       if [ $? -eq 0 ]
       then
          printf "Success: scp of ${2} to the right camera.\n"
@@ -86,69 +86,77 @@ if [ $is_base == 1 ]; then
          exit 1
       fi
    fi
-fi
-
-# copy other executables (bbase, cam, dat2png, gen_cam_params)
-if [[ $2 == *"out"* ]]; then
-   if [[ $2 == *"dat2png"* ]] || [[ $2 == *"gen_cam_params"* ]]; then
-      cp -v $1/$2 /home/${USER}/boomer/execs/
-   else
-      # the following is necessary for systectl to be called when the script is from from incron
-      export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus"
-
-      systemctl --user stop boomer.service
+   if [[ $2 == *"spkr"* ]]; then
+      scp -pq $1/$2 spkr:${staged_dest_dir}
       if [ $? -eq 0 ]
       then
-         printf "boomer service stopped.\n"
-      else
-         printf "Failure on boomer.service stop.\n"  >&2
-         exit 1
-      fi
-
-      boomer_pid=$(pgrep bbase)
-      if [ $boomer_pid -ne "" ]; then
-         printf "killing pid=%s\n" $boomer_pid
-         sudo kill -9 $boomer_pid
-      fi
-
-      sudo -u root -g sudo setcap 'cap_sys_nice=eip' $1/$2
-      #/usr/sbin/setcap 'cap_sys_nice=eip' $1
-      if [ $? -eq 0 ]
-      then
-         printf "priority capabilities set on: %s\n" $1/$2
-      else
-         printf "Failed: setcap 'cap_sys_nice=eip for: %s\n" $1/$2 >&2
-         exit 1
-      fi
-
-      # chmod should be unnecessary with scp -p or rsync -E
-      chmod +x $1/$2
-      if [ $? -eq 0 ]
-      then
-         printf "+x set on: %s\n" $1/$2
-      else
-         printf "Failed: chmod +x for: %s\n" $1/$2 >&2
-         exit 1
-      fi
-      mv -v $1/$2 /home/${USER}/boomer/execs/
-      if [ $? -eq 0 ]
-      then
-         printf "Success: mv of %s to /home/pi/boomer/execs.\n" $1
-         # uncomment the following when running interactively (vs by systemd)
-         # exit 0
-      else
-         printf "Failed: mv of %s to /home/pi/boomer/execs.\n" $1 >&2
-         exit 1
-      fi
-      systemctl --user start boomer.service
-      if [ $? -eq 0 ]
-      then
-         printf "boomer service started.\n"
+         printf "Success: scp of ${2} to the spkr.\n"
          exit 0
       else
-         printf "Failure on boomer.service start.\n"  >&2
+         printf "Failed: scp of ${2} to the spkr.\n" >&2
          exit 1
       fi
+   fi
+fi
+
+# stop boomer.service, copy in the new executable and restart the service:
+if [[ ( $is_base && $2 == *"base"* ) || $is_base == 0 ]]; then
+      # the following is necessary for systectl to be called when the script is from from incron
+   export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/1000/bus"
+
+   systemctl --user stop boomer.service
+   if [ $? -eq 0 ]
+   then
+      printf "boomer service stopped.\n"
+   else
+      printf "Failure on boomer.service stop.\n"  >&2
+      exit 1
+   fi
+
+   # the following should be unnecessary
+   # boomer_pid=$(pgrep bbase)
+   # if [ $boomer_pid -ne "" ]; then
+   #    printf "killing pid=%s\n" $boomer_pid
+   #    sudo kill -9 $boomer_pid
+   # fi
+
+   sudo -u root -g sudo setcap 'cap_sys_nice=eip' $1/$2
+   #/usr/sbin/setcap 'cap_sys_nice=eip' $1
+   if [ $? -eq 0 ]
+   then
+      printf "priority capabilities set on: %s\n" $1/$2
+   else
+      printf "Failed: setcap 'cap_sys_nice=eip for: %s\n" $1/$2 >&2
+      exit 1
+   fi
+
+   # chmod should be unnecessary with scp -p or rsync -E
+   chmod +x $1/$2
+   if [ $? -eq 0 ]
+   then
+      printf "+x set on: %s\n" $1/$2
+   else
+      printf "Failed: chmod +x for: %s\n" $1/$2 >&2
+      exit 1
+   fi
+   mv -v $1/$2 /home/${USER}/boomer/execs/
+   if [ $? -eq 0 ]
+   then
+      printf "Success: mv of %s to /home/pi/boomer/execs.\n" $1
+      # uncomment the following when running interactively (vs by systemd)
+      # exit 0
+   else
+      printf "Failed: mv of %s to /home/pi/boomer/execs.\n" $1 >&2
+      exit 1
+   fi
+   systemctl --user start boomer.service
+   if [ $? -eq 0 ]
+   then
+      printf "boomer service started.\n"
+      exit 0
+   else
+      printf "Failure on boomer.service start.\n"  >&2
+      exit 1
    fi
 fi
 

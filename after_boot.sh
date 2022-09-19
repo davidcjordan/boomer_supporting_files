@@ -1,19 +1,22 @@
 #!/bin/bash
+
 # ssh keys:
 # cam: key copied to base, daves
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
-if [ -z "${GITHUB_TOKEN}" ]; then 
+if [[ -z "${GITHUB_TOKEN}" && $(hostname) =~ ^(base)$ ]]; then 
    echo "type: 'export GITHUB_TOKEN=something' before running script"; 
    exit 1
 fi
 
-if [ $(hostname) == 'left' ] || [ $(hostname) == 'right' ]; then
+if [[ $(hostname) =~ ^(left|right)$ ]]; then 
    is_camera=1
 else
    is_camera=0
 fi
+
+user_id="pi"
 
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
@@ -26,7 +29,7 @@ else
 fi
 # add base rpi to transfer log fils over wifi
 #ssh-copy-id base
-printf "!!Skipping ssh-copy-id base"
+printf "!!Skipping ssh-copy-id base\n"
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.27.2\n"
 else
@@ -35,7 +38,7 @@ else
 fi
 # add daves rpi to transfer log fils over enet
 #ssh-copy-id daves
-printf "!!Skipping ssh-copy-id daves"
+printf "!!Skipping ssh-copy-id daves\n"
 if [ $? -eq 0 ]; then
    printf "OK: ssh-copy-id pi@192.168.0.40\n"
 else
@@ -56,9 +59,11 @@ sudo apt update && sudo apt --yes upgrade
 sudo modprobe i2c-dev
 
 # build & install the wifi-driver
-sudo apt --yes install dkms
-cd ~/repos/88x2bu-20210702
-sudo ./install-driver.sh NoPrompt
+if [ $(hostname) != 'spkr' ]; then
+   sudo apt --yes install dkms
+   cd ~/repos/88x2bu-20210702
+   sudo ./install-driver.sh NoPrompt
+fi
 
 # use vi as an editor for crontab
 # for more info: https://askubuntu.com/questions/891928/how-can-i-add-my-desired-editor-to-the-update-alternatives-interactive-menu
@@ -100,7 +105,7 @@ sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
 sudo systemctl stop alsa-state.service
 sudo systemctl disable alsa-state.service
-if ${is_camera}; then
+if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
    printf "disabling systemd-timesyncd.service\n"
    sudo systemctl stop systemd-timesyncd.service
    sudo systemctl disable systemd-timesyncd.service
@@ -114,7 +119,9 @@ sudo update-locale en_US.UTF-8
 
 sudo apt --yes install git
 #sudo apt --yes install i2c-dev
-sudo apt --yes install i2c-tools
+if [ $is_camera -eq 1 ] || [ $(hostname) == 'base' ]; then
+   sudo apt --yes install i2c-tools
+fi
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
 if [ $is_camera -eq 1 ]; then
@@ -167,11 +174,28 @@ if [ $(hostname) == 'base' ]; then
   systemctl --user enable base_gui.service
 fi
 
+if [ $(hostname) == 'spkr' ]; then
+   # get audio files;
+   cd ~/boomer
+   rsync -azh base:/home/pi/repos/audio .
+   if [ $? -ne 0 ]; then
+      printf "rsync of audio directory failed.\n"
+   fi
+   # sudo -u ${user_id} git clone https://github.com/${GITHUB_USER}/audio
+fi
+
+#the following is required to have the base/cam service start when not logged in
+loginctl enable-linger pi
+if [ $? -ne 0 ]; then
+   printf "enable-linger failed.\n"
+   exit 1
+fi
+
 # need to transfer in executables
 systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
-if [ $is_camera -eq 1 ]; then
+if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
    sudo crontab ${source_dir}/crontab_cam.txt
 fi
 

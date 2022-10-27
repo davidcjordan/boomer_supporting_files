@@ -131,13 +131,6 @@ if [ $is_camera -eq 1 ]; then
    cd MIPI_Camera/RPI/; make install
 fi
 
-#the following is required to have the base/cam service start when not logged in
-loginctl enable-linger pi
-if [ $? -ne 0 ]; then
-   printf "enable-linger failed.\n"
-   exit 1
-fi
-
 GITHUB_USER=davidcjordan
 if [ $(hostname) == 'base' ]; then
    sudo apt --yes install hostapd; sudo systemctl stop hostapd

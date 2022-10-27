@@ -3,9 +3,19 @@ Description=Boomer User Interface web-server
 
 [Service]
 Type=simple
-RemainAfterExit=True
-WorkingDirectory=/home/pi/repos/ui-webserver/app
-ExecStart=/home/pi/repos/ui-webserver/app/web-ctrl.py
+WorkingDirectory=/home/pi/repos/ui-webserver
+ExecStart=/bin/bash -c 'PATH=/home/pi/repos/ui-webserver/venv/bin:$PATH exec gunicorn --config gunicorn.conf.py --log-config gunicorn_log.conf "app:create_app()"'
+
+# examples had --serve-in-foreground option;  it didn't appear to be necessary
+
+# setting the environment didnt work: it couldn't find gunicorn, hence used the exec method above
+#Environment="PATH=/home/pi/repos/ui-webserver/venv/bin:$PATH"
+#ExecStart=gunicorn --config gunicorn.conf.py --log-config gunicorn_log.conf "app:create_app()"
+
+#Previous waitress-based web server:
+#WorkingDirectory=/home/pi/repos/ui-webserver/app
+#ExecStart=/home/pi/repos/ui-webserver/app/web-ctrl.py
+
 Restart=always
 
 [Install]

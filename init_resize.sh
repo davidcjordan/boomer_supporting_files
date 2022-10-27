@@ -56,7 +56,8 @@ get_variables () {
   check_noobs
 
   ROOT_DEV_SIZE=$(cat "/sys/block/${ROOT_DEV_NAME}/size")
-  TARGET_END=$((ROOT_DEV_SIZE - 1))
+  #TARGET_END=$((ROOT_DEV_SIZE - 1))  Using the following line to set the target to 3.9G
+  TARGET_END=7700000
 
   PARTITION_TABLE=$(parted -m "$ROOT_DEV" unit s print | tr -d 's')
 

@@ -97,10 +97,8 @@ if [ ! -d ${mount_root_dir} ]; then
    mkdir ${mount_root_dir}
 fi
 
-mount /dev/${2}2 ${mount_root_dir}
-if [ $? -eq 0 ]; then
-   printf "OK: mount /dev/${2}2 ${mount_root_dir}\n"
-else
+mount -v /dev/${2}2 ${mount_root_dir}
+if [ $? -ne 0 ]; then
    printf "Failed: mount /dev/${2}2 ${mount_root_dir}\n" >&2
    exit 1
 fi
@@ -156,6 +154,12 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
+# init_resize.sh has been modified to keep the filesystem at 4G instead of the whole SD card
+cp -v ${source_dir}/init_resize.sh /media/rootfs/usr/lib/raspi-config
+if [ $? -ne 0 ]; then
+   printf "copy init_resize.sh failed.\n"
+   exit 1
+fi
 
 # put i2c-dev in /etc/modules file (this is usually done with raspi-config)
 # sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
@@ -240,7 +244,7 @@ fi
 
 #cd out of the mounted file system before un-mounting
 cd
-umount ${mount_root_dir}
+umount -v ${mount_root_dir}
 
 #/boot/config.txt - enable camera (start_x), i2c, disable built-in Wifi
 if [ ! -d ${mount_boot_dir} ]; then
@@ -248,11 +252,8 @@ if [ ! -d ${mount_boot_dir} ]; then
    mkdir ${mount_boot_dir}
 fi
 
-mount /dev/${2}1 ${mount_boot_dir}
-if [ $? -eq 0 ]
-then
-   printf "OK: mount /dev/${2}1 ${mount_boot_dir}\n"
-else
+mount -v /dev/${2}1 ${mount_boot_dir}
+if [ $? -ne 0 ]; then
    printf "Failed: mount /dev/${2}1 ${mount_boot_dir}\n" >&2
    exit 1
 fi
@@ -260,6 +261,25 @@ fi
 sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
 echo "" >> ${mount_boot_dir}/config.txt
 echo "#boomer" >> ${mount_boot_dir}/config.txt
+
+# the following enables ssh - doing it using raspi-config do_ssh in firstrun ?? may have failed.
+touch ${mount_boot_dir}/ssh
+
+# the following commands are added to /boot/firstrun.sh
+# refer to /usr/bin/raspi-config
+# the following is unnecessary since the country is already in wpa_supplicant
+#echo "sudo raspi-config nonint do_wifi_country US" >> ${mount_boot_dir}/firstrun.sh
+# an alternative is here: https://unix.stackexchange.com/questions/127705/automatically-run-rfkill-unblock-on-startup
+sed -i "s/^KBEOF$/KBEOF\nrfkill unblock wifi/" >> ${mount_boot_dir}/firstrun.sh
+# do ssh does the following:  update-rc.d ssh enable && invoke-rc.d ssh start &&
+sed -i "s/^KBEOF$/KBEOF\nsudo raspi-config nonint do_ssh 1" >> ${mount_boot_dir}/firstrun.sh
+
+# Disable "Welcome to Raspberry Pi" setup wizard at system start
+# refer to: https://forums.raspberrypi.com/viewtopic.php?t=231557
+rm -v /etc/xdg/autostart/piwiz.desktop
+if [ $? -ne 0 ]; then
+   printf "Failed: rm -v /etc/xdg/autostart/piwiz.desktop\n" >&2
+fi
 
 if [ $is_camera -eq 1 ]; then
    echo "#dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
@@ -271,17 +291,18 @@ fi
 if [ $1 == "base" ]; then
    # the following is per https://forums.raspberrypi.com/viewtopic.php?t=299193
    # to force hdmi 0 & 1 plugs
+   #HOWEVER: don't force both, because then linux will think there are 2, which is unusable
    echo "#hdmi_mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
 
-   echo "hdmi_ignore_edid:0=0xa5000080" >> ${mount_boot_dir}/config.txt
-   echo "hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_ignore_edid:0=0xa5000080" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
    echo "hdmi_group:0=2" >> ${mount_boot_dir}/config.txt
    echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
 
-   echo "hdmi_ignore_edid:1=0xa5000080" >> ${mount_boot_dir}/config.txt
-   echo "hdmi_force_hotplug:1=1" >> ${mount_boot_dir}/config.txt
-   echo "hdmi_group:1=2" >> ${mount_boot_dir}/config.txt
-   echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_ignore_edid:1=0xa5000080" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_force_hotplug:1=1" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_group:1=2" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_mode:1=28" >> ${mount_boot_dir}/config.txt
 
    # echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
    # echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt

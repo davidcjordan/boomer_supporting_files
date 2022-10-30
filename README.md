@@ -13,7 +13,13 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
     - these settings can be saved and used on multiple runs if the imager
   - ! the scripts should be run as sudo, like this: ```sudo bash make_boomer_sdcard.sh base sdb```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 
-
+## Problems to solve:
+* firstrun.sh failures:
+ * rfkill
+ * raspi-config do_ssh (currently using touch ssh)
+ * Disable "Welcome to Raspberry Pi" setup wizard at system start (put in make_boomer script, but not tested)
+ * ?change desktop
+ 
 ## Notes:
 Here is the timing of making an SD-card with the scripts:
 * imager: about 10 minutes, but it requires typing in a password

@@ -49,7 +49,6 @@ fi
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
 #enable wifi:
-sudo raspi-config nonint do_wifi_country US
 rfkill unblock wifi
 
 # without update, then install libopencv will fail
@@ -142,9 +141,11 @@ if [ $(hostname) == 'base' ]; then
    sudo systemctl unmask hostapd.service 
    sudo apt-get install gpiod
    # install stuff for python web-server
-   python3 -m pip install flask-socketio
-   python3 -m pip install eventlet
-   python3 -m pip install waitress
+   python3 -m venv venv
+   . venv/bin/activate
+   python3 -m pip install gunicorn==20.1.0 eventlet==0.30.2
+   python3 -m pip install flask
+   python3 -m pip install flask-socketio <-appears to be included with flask
    #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
    #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
    # need to disable the 'Restore Chromium' refer to: https://raspberrypi.stackexchange.com/questions/68734/how-do-i-disable-restore-pages-chromium-didnt-shut-down-correctly-prompt#85827

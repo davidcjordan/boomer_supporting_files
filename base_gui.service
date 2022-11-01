@@ -4,6 +4,8 @@ Description=Boomer User Interface web-server
 [Service]
 Type=simple
 WorkingDirectory=/home/pi/repos/ui-webserver
+# not sure why the delay is required, but it didn't work without it
+ExecStartPre=/bin/sleep 8
 ExecStart=/bin/bash -c 'PATH=/home/pi/repos/ui-webserver/venv/bin:$PATH exec gunicorn --config gunicorn.conf.py --log-config gunicorn_log.conf "app:create_app()"'
 
 # examples had --serve-in-foreground option;  it didn't appear to be necessary

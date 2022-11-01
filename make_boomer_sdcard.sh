@@ -7,15 +7,17 @@
 #   the advanced options dialog box is optained using CTRL-SHIFT-x
 # reference for advanced options: easyprogramming.net/raspberrypi/raspberry_pi_imager_advanced_options.php
 # - enable ssh AND set pi (user) password
-# - set locale settings
-# - skip first-run wizard
-# - the wifi settings dont' matter - they will get over-written
+# - enable wifi: set country, SSID, password.  IMPORTANT need this in order to have rfkill unblock wifi run
+# - set local & timezone
+# 
+# This script will configure dhcp, hostapd, the USB-wifi adapter driver, etc
+# the 'after_boot.sh' script will update the wpa_supplicant, since the raspberry imager overwrites it
 
 if [ -z $2 ]; then
  printf "arg 2 (sd card, e.g. sdb or sdc) is empty\n"
  printf "usage: sudo bash make_boomer_sdcard.sh function sdcard\n"
  printf "       where function is one of <base, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
- printf "sudo bash make_boomer_sdcard.sh left sdb\n"
+ printf "sudo bash make_boomer_sdcard.sh base sdb\n"
  exit 1
 fi
 
@@ -137,22 +139,11 @@ if [ $1 == "base" ]; then
    echo "  static ip_address=${base_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
    echo "  nohook wpa_supplicant" >> dhcpcd.conf
 else
+   # the speaker on has the builtin wlan; the cameras have the builtin wlan disabled, the USB-adapter is wlan0
    sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 fi
 
-if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
-   mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
-fi
-
-if [ $1 == "base" ]; then
-   cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
-else
-   cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
-fi
-if [ $? -ne 0 ]; then
-   printf "copy wpa_supplicant failed.\n"
-   exit 1
-fi
+# updating wpa_supplicant.conf is now down in after_boot, since the imager's advanced options overwrite it.
 
 # init_resize.sh has been modified to keep the filesystem at 4G instead of the whole SD card
 cp -v ${source_dir}/init_resize.sh /media/rootfs/usr/lib/raspi-config
@@ -177,10 +168,6 @@ fi
 
 #the following is unnecessary to disable swap, using: systemctl disable dphys-swapfile.service
 #sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
-
-# fix locale
-sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" locale.gen
-#in after_boot.sh:  sudo locale-gen; sudo update-locale en_US.UTF-8
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
@@ -242,6 +229,12 @@ if [ $is_camera -eq 1 ]; then
    sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
 fi
 
+# Disable "Welcome to Raspberry Pi" setup wizard at system start
+# refer to: https://forums.raspberrypi.com/viewtopic.php?t=231557
+if [ $1 == "base" ]; then
+   rm -v ${mount_root_dir}/etc/xdg/autostart/piwiz.desktop
+fi
+
 #cd out of the mounted file system before un-mounting
 cd
 umount -v ${mount_root_dir}
@@ -258,28 +251,27 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
+# the following enables ssh
+# touch ${mount_boot_dir}/ssh
+
+# DID NOT WORK: the following commands are added to /boot/firstrun.sh
+# refer to /usr/bin/raspi-config
+# an alternative is here: https://unix.stackexchange.com/questions/127705/automatically-run-rfkill-unblock-on-startup
+#NOTE: firstrun.sh will only get created if 'Advanced Options' are selected:
+#sed -i "s/^KBEOF$/KBEOF\nrfkill unblock wifi/" ${mount_boot_dir}/firstrun.sh
+# do ssh does the following:  update-rc.d ssh enable && invoke-rc.d ssh start &&
+#sed -i "s/^KBEOF$/KBEOF\nsudo raspi-config nonint do_ssh 1/" ${mount_boot_dir}/firstrun.sh
+
+## FUTURE!! - automatically call after_boot.sh from firstrun.sh ?
+
+#remove "welcome to Raspberry Pi splash screen" on boot-up
+sed -i "s/splash//" ${mount_boot_dir}/cmdline.txt
+#remove quiet to see messages on boot; by default it quiet
+#sed -i "s/quiet//" ${mount_boot_dir}/cmdline.txt
+
 sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
 echo "" >> ${mount_boot_dir}/config.txt
 echo "#boomer" >> ${mount_boot_dir}/config.txt
-
-# the following enables ssh - doing it using raspi-config do_ssh in firstrun ?? may have failed.
-touch ${mount_boot_dir}/ssh
-
-# the following commands are added to /boot/firstrun.sh
-# refer to /usr/bin/raspi-config
-# the following is unnecessary since the country is already in wpa_supplicant
-#echo "sudo raspi-config nonint do_wifi_country US" >> ${mount_boot_dir}/firstrun.sh
-# an alternative is here: https://unix.stackexchange.com/questions/127705/automatically-run-rfkill-unblock-on-startup
-sed -i "s/^KBEOF$/KBEOF\nrfkill unblock wifi/" >> ${mount_boot_dir}/firstrun.sh
-# do ssh does the following:  update-rc.d ssh enable && invoke-rc.d ssh start &&
-sed -i "s/^KBEOF$/KBEOF\nsudo raspi-config nonint do_ssh 1" >> ${mount_boot_dir}/firstrun.sh
-
-# Disable "Welcome to Raspberry Pi" setup wizard at system start
-# refer to: https://forums.raspberrypi.com/viewtopic.php?t=231557
-rm -v /etc/xdg/autostart/piwiz.desktop
-if [ $? -ne 0 ]; then
-   printf "Failed: rm -v /etc/xdg/autostart/piwiz.desktop\n" >&2
-fi
 
 if [ $is_camera -eq 1 ]; then
    echo "#dtoverlay=disable-wifi" >> ${mount_boot_dir}/config.txt
@@ -295,7 +287,8 @@ if [ $1 == "base" ]; then
    echo "#hdmi_mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
 
    echo "#hdmi_ignore_edid:0=0xa5000080" >> ${mount_boot_dir}/config.txt
-   echo "#hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
+   # the HDMI needs the force hotplug in order to keep the touchscreen on all the time:
+   echo "hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
    echo "hdmi_group:0=2" >> ${mount_boot_dir}/config.txt
    echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
 

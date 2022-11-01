@@ -1,8 +1,4 @@
 # boomer_supporting_files
-config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts are in this repository.
-
-init_resize.sh is a copy of /usr/lib/raspi-config/init_resize.sh whcih sets TARGET_END to 4GB instead of the size of the SD-card.  To make an sd-card with a small linux/root partition, over-write the normal init_resize with the edited one.
-
 There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
 - These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
   - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
@@ -13,18 +9,13 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
     - these settings can be saved and used on multiple runs if the imager
   - ! the scripts should be run as sudo, like this: ```sudo bash make_boomer_sdcard.sh base sdb```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 
-## Problems to solve:
-* firstrun.sh failures:
- * rfkill
- * raspi-config do_ssh (currently using touch ssh)
- * Disable "Welcome to Raspberry Pi" setup wizard at system start (put in make_boomer script, but not tested)
- * ?change desktop
+The repository contains config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts.
  
 ## Notes:
 Here is the timing of making an SD-card with the scripts:
-* imager: about 10 minutes, but it requires typing in a password
+* imager: about 10 minutes
 * make_boomer_sdcard: less than a minute
-* after_boomer.sh takes about 10-30 minutes.  Most of the time is installing opencv
+* after_boomer.sh takes about 10-30 minutes.  Most of the time is installing opencv and building the wifi adapter driver
 
 Making an SD card using the scripts:
 * Advantages:
@@ -33,15 +24,25 @@ Making an SD card using the scripts:
 * Disadvantages:
   * requires multiple steps and checking for errors
 
-Making an SD card by copying a 4GB SD card (or using a small image) takes ?? minutes and is simpler.
+Making an SD card by copying a 4GB SD card (or using a small image) takes 10 minutes and is simpler.
 
-The default when booting an freshly created image is for the OS to resize the root partition (/) to use the whole SD card.  To disable this and have the root partition be 4GB, do the following after making the image and mounting the root directory (but before booting the SD-card):
+The default when booting an freshly created image is for the OS to resize the root partition (/) to use the whole SD card.  To disable this and have the root partition be 4GB, the following is done by the make_sd script:
 ```
 cp -v ~/repos/boomer_supporting_files/init_resize.sh /media/rootfs/usr/lib/raspi-config
 ```
-After the SD-card is booted, and the after_boot.sh script is run, you should have a 4GB SD-card (or image) that can be copied.
+init_resize.sh in this repositoary is a copy of /usr/lib/raspi-config/init_resize.sh which sets TARGET_END to 4GB instead of the size of the SD-card.  To make an sd-card with a small linux/root partition, over-write the normal init_resize with the edited one.
 
-## Directory structure:
+After the SD-card is booted, and the after_boot.sh script is run, the 4GB SD-card (or image) that can be copied as follows:
+```
+sudo dd if=/dev/sdc bs=1M count=4102 status=progress | gzip > ~/Downloads/202Y-MM-DD-base.img.gz
+```
+This takes about 10 minutes and results in a ~1.7GB compressed image file.
+
+After flashing the above image, use the following command to increase the root filesystem:
+```
+sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2
+```
+## Directory structure of boomer base, cameras and spkr
 ```
 pi@base:~/boomer $ ls -al
 total 116

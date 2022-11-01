@@ -48,7 +48,22 @@ fi
 
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
-#enable wifi:
+# change the wpa_supplicant from the one installed by the imager advanced options, to the one that support BOOM_NET
+if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
+   mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
+fi
+
+if [ $1 == "base" ]; then
+   cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
+else
+   cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+fi
+if [ $? -ne 0 ]; then
+   printf "copy wpa_supplicant failed.\n"
+   exit 1
+fi
+
+#enable wifi:  NOTE: this should have already been done by the imager advanced options
 rfkill unblock wifi
 
 # without update, then install libopencv will fail
@@ -110,9 +125,20 @@ if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
    sudo systemctl disable systemd-timesyncd.service
 fi
 
-# fix locale warning
+# fix locale warning: NOTE: this should have already been done by the imager advanced options
+sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+if [ $? -ne 0 ]; then
+   printf "enable of en_US in /etc/locale.gen failed.\n"
+fi
 sudo locale-gen
+if [ $? -ne 0 ]; then
+   printf "locale-gen failed.\n"
+fi
+
 sudo update-locale en_US.UTF-8
+if [ $? -ne 0 ]; then
+   printf "update-locale failed.\n"
+fi
 # sudo locale-gen --purge --no-archive 
 # sudo update-initramfs -u
 
@@ -195,3 +221,5 @@ fi
 
 printf "\n  Success - the sd-card has been configured.\n"
 printf "    HOWEVER: bcam or bbase.out and the cam_params have to be loaded.\n"
+printf "    To increase the root partition size, do the following commands:\n"
+printf "    sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"

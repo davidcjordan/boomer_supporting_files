@@ -30,3 +30,5 @@ alias haltall='ssh left sudo halt; ssh right sudo halt; ssh spkr sudo halt; sudo
 alias uiv='cd ~/repos/ui-webserver; . venv/bin/activate'
 #alias uig='gunicorn -k eventlet -b 0.0.0.0:1111 "app:create_app()"'
 alias uig='gunicorn --config gunicorn.conf.py --log-config gunicorn_log.conf "app:create_app()"'
+
+alias swap-lines-12='sed -i '\''1{h;d};2{x;H;x}'\'''

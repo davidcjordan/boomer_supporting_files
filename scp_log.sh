@@ -42,7 +42,7 @@ shm_dir="/run/shm"
 
 eth_state=$(cat /sys/class/net/eth0/operstate)
 
-if [ $(hostname) == "base" ]; then
+if [[ $(hostname) == "base"* ]]; then
   if [ $eth_state == "up" ]; then
     dest_ip="daves"
     dest="${user_id}@${dest_ip}:${log_dir}"

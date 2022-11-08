@@ -205,7 +205,18 @@ pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
 ### Install datetime bash command to run via crontab so logging will have correct time on cams, speaker
   sudo crontab crontab_cam.txt
 
-### install ngrok on base
+### install tailscale on base
+tailscale allows ssh'ing to a base unit if it's connected to an internet accessable router.
+It was selected instead of using ngrok because up to 20 devices are supported for a free account.
+A gmail account 'rio.co.4444@gmail' was created to use as credentials for the devices (boomer base).
+Each base has to have a unique hostname, e.g. base-1, base-2; so the hostnames have to be edited after flashing a base SDcard.
+
+To install:
+```
+curl -fsSL https://tailscale.com/install.sh | sh
+```
+
+### [OLD - left just in case] install ngrok on base
 ngrok allows ssh'ing to a base unit if it's connected to an internet accessable router (wifi or enet).
 
 To find the URL and port to use, go to the ngrok dashboard: https://dashboard.ngrok.com/cloud-edge/endpoints

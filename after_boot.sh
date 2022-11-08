@@ -5,7 +5,14 @@
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
-if [[ -z "${GITHUB_TOKEN}" && $(hostname) =~ ^(base)$ ]]; then 
+if [[ $(hostname) == "base"* ]]; then 
+   is_base=1
+else
+   is_base=0
+fi
+# printf "is_base=${is_base}\n"
+
+if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
    echo "type: 'export GITHUB_TOKEN=something' before running script"; 
    exit 1
 fi
@@ -53,7 +60,7 @@ if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
    mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
 fi
 
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1 ]; then
    cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
 else
    cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
@@ -144,7 +151,7 @@ fi
 
 sudo apt --yes install git
 #sudo apt --yes install i2c-dev
-if [ $is_camera -eq 1 ] || [ $(hostname) == 'base' ]; then
+if [ $is_camera -eq 1 ] || [ $is_base -eq 1 ]; then
    sudo apt --yes install i2c-tools
 fi
 
@@ -157,7 +164,7 @@ if [ $is_camera -eq 1 ]; then
 fi
 
 GITHUB_USER=davidcjordan
-if [ $(hostname) == 'base' ]; then
+if [ $is_base -eq 1 ]; then
    sudo apt --yes install hostapd; sudo systemctl stop hostapd
    sudo apt --yes install dnsmasq; sudo systemctl stop dnsmasq
    sudo mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.orig

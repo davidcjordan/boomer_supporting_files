@@ -26,26 +26,38 @@ if [ -z $1 ]; then
  exit 1
 fi
 
-if [ $1 != "base" ] && [ $1 != "left" ] &&  [ $1 != "right" ]  &&  [ $1 != "spkr" ]; then
- printf "arg 1 is not one of 'base', 'left','right' or 'spkr' \n"
- exit 1
-fi
-
 if [ $1 == 'left' ] || [ $1 == 'right' ]; then
    is_camera=1
 else
    is_camera=0
 fi
 
+if [[ $1 == "base"* ]]; then 
+   is_base=1
+else
+   is_base=0
+fi
+
+if [[ $1 == "spkr"* ]]; then 
+   is_spkr=1
+else
+   is_spkr=0
+fi
+
+if [ $is_base -eq 0 ] && [ $is_camera -eq 0 ] &&  [ $is_spkr -eq 0 ]; then
+ printf "arg 1 is not one of 'base', 'left','right' or 'spkr' \n"
+ exit 1
+fi
+
 # configure IP addresses to be used in dhcpcd.conf
 if [ -z $3 ]; then
    # normal case (using Daves enet switch)
    eth_ip_A_B_C="192.168.0."
-   if [ $1 == "base" ]; then
+   if [ $is_base -eq 1 ]; then
        eth_ip_D="42"
-   elif [ $1 == "left" ]; then
+   elif [[ $1 == "left"* ]]; then
        eth_ip_D="43"
-   elif [ $1 == "right" ]; then
+   elif [[ $1 == "right"* ]]; then
        eth_ip_D="44"
    else
        eth_ip_D="46"
@@ -53,11 +65,11 @@ if [ -z $3 ]; then
 else
    printf "Using Tom's network addresses\n"
    eth_ip_A_B_C="10.0.1."
-   if [ $1 == "base" ]; then
+   if [ $is_base -eq 1 ]; then
        eth_ip_D="102"
-   elif [ $1 == "left" ]; then
+   elif [[ $1 == "left"* ]]; then
        eth_ip_D="103"
-   elif [ $1 == "right" ]; then
+   elif [[ $1 == "right"* ]]; then
        eth_ip_D="104"
    else
        eth_ip_D="106"
@@ -71,11 +83,11 @@ left_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}3"
 right_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}4"
 spkr_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}6"
 
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1 ]; then
    my_boom_net_ip_A_B_C_D=${base_boom_net_ip_A_B_C_D}
-elif [ $1 == "left" ]; then
+elif [[ $1 == "left"* ]]; then
    my_boom_net_ip_A_B_C_D=${left_boom_net_ip_A_B_C_D}
-elif [ $1 == "right" ]; then
+elif [[ $1 == "right"* ]]; then
    my_boom_net_ip_A_B_C_D=${right_boom_net_ip_A_B_C_D}
 else
    my_boom_net_ip_A_B_C_D=${spkr_boom_net_ip_A_B_C_D}
@@ -132,7 +144,7 @@ sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
 # builtin wpa is disabled on camera & spkr RPi; so configure wpa0
 # the base uses the built-in wpa0 to connect to nearby WiFi, use dhcp for wlan0
 #   and use wlan1 to host BOOM_NET
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1 ]; then
    # remove wlan0 config in order to use dhcp
    sed -i "s/^.*wlan0.*//g" dhcpcd.conf
    echo "interface wlan1" >> dhcpcd.conf
@@ -231,7 +243,7 @@ fi
 
 # Disable "Welcome to Raspberry Pi" setup wizard at system start
 # refer to: https://forums.raspberrypi.com/viewtopic.php?t=231557
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1 ]; then
    rm -v ${mount_root_dir}/etc/xdg/autostart/piwiz.desktop
 fi
 
@@ -280,7 +292,7 @@ if [ $is_camera -eq 1 ]; then
    echo "#gpu_mem=128" >> ${mount_boot_dir}/config.txt
    echo "dtoverlay=pwm" >> ${mount_boot_dir}/config.txt
 fi
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1  ]; then
    # the following is per https://forums.raspberrypi.com/viewtopic.php?t=299193
    # to force hdmi 0 & 1 plugs
    #HOWEVER: don't force both, because then linux will think there are 2, which is unusable

@@ -23,6 +23,13 @@ else
    is_camera=0
 fi
 
+if [[ $(hostname) == "spkr"* ]]; then 
+   is_spkr=1
+else
+   is_spkr=0
+fi
+# printf "is_base=${is_base}\n"
+
 user_id="pi"
 
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
@@ -80,7 +87,7 @@ sudo apt update && sudo apt --yes upgrade
 sudo modprobe i2c-dev
 
 # build & install the wifi-driver
-if [ $(hostname) != 'spkr' ]; then
+if [ $is_spkr -ne 1 ]; then
    sudo apt --yes install dkms
    cd ~/repos/88x2bu-20210702
    sudo ./install-driver.sh NoPrompt
@@ -103,7 +110,6 @@ scap_rule_filename="/etc/sudoers.d/011_pi-setcap"
 sudo touch ${scap_rule_filename}
 echo "${USER} ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap" | sudo tee -a ${scap_rule_filename}
 # wasn't able to have the following rule allow pi to set the date
-# so setting the date is done using the root crontab
 # refer to: https://unix.stackexchange.com/questions/78299/allow-a-specific-user-or-group-root-access-without-password-to-bin-date
 #echo "${USER} ALL=(ALL:ALL) NOPASSWD: /bin/date" | sudo tee -a /etc/sudoers
 
@@ -201,14 +207,14 @@ if [ $is_base -eq 1 ]; then
   systemctl --user enable base_gui.service
 fi
 
-if [ $(hostname) == 'spkr' ]; then
+if [ $is_spkr -ne 1 ]; then
    # get audio files;
    cd ~/boomer
-   rsync -azh base:/home/pi/repos/audio .
-   if [ $? -ne 0 ]; then
-      printf "rsync of audio directory failed.\n"
-   fi
-   # sudo -u ${user_id} git clone https://github.com/${GITHUB_USER}/audio
+   # rsync -azh base:/home/pi/repos/audio .
+   # if [ $? -ne 0 ]; then
+   #    printf "rsync of audio directory failed.\n"
+   # fi
+   sudo -u ${user_id} git clone https://github.com/${GITHUB_USER}/audio
 fi
 
 #the following is required to have the base/cam service start when not logged in
@@ -222,8 +228,8 @@ fi
 systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
-if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
-   sudo crontab ${source_dir}/crontab_cam.txt
+if [ $is_camera -eq 1 ] || [$is_spkr -eq 1 ]; then
+   crontab ${source_dir}/crontab_cam.txt
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

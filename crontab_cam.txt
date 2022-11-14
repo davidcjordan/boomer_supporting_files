@@ -1,2 +1,4 @@
-   @reboot date --set="$(ssh base date +\"%Y%m%d\ %H:%M:%S\")"
-   @daily date --set="$(ssh base date +\"%Y%m%d\ %H:%M:%S\")"
+@reboot sleep 20; ~/repos/boomer_supporting_files/setdate.sh
+3 3 * * * ~/repos/boomer_supporting_files/setdate.sh
+# the preceeding line runs at 3 AM; the following was used for testing - use journalctl -f to see execution
+#*/1 * * * * ~/setdate.sh > /home/pi/boomer/script_logs/set_date.log 2>&1 | logger -t mycmd

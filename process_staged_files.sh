@@ -24,7 +24,7 @@ then
  exit 1
 fi
 
-if [ $(hostname) == 'base' ]; then
+if [[ $(hostname) == "base"* ]]; then 
    is_base=1
 else
    is_base=0

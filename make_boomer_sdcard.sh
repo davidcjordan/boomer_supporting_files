@@ -311,7 +311,8 @@ if [ $is_base -eq 1  ]; then
 
    # echo "hdmi_group=2" >> ${mount_boot_dir}/config.txt
    # echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
-   # echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
+   # the following is necessary for the tachometer, which uses UART 2
+   echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
 fi
 
 cd

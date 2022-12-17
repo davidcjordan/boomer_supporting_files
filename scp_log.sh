@@ -18,7 +18,7 @@ fi
 
 extension="${2##*.}"
 # printf "file extension: $extension\n"
-if [[ $2 == *"boomer.log"* ]] || [ $extension == "fifo" ] || [ $extension == "png" ]; then
+if [[ $2 == *"boomer.log"* ]] || [ $extension == "fifo" ] || [ $extension == "png" ] || [[ $2 == *"intensity.log"* ]]; then
  printf "skipping handling of file: $2\n"
  exit 0
 fi

@@ -167,6 +167,8 @@ if [ $is_camera -eq 1 ]; then
    cd ~/repos
    git clone https://github.com/ArduCAM/MIPI_Camera.git
    cd MIPI_Camera/RPI/; make install
+   cd ~/boomer
+   ln -s execs/bcam.out .
 fi
 
 GITHUB_USER=davidcjordan
@@ -196,25 +198,25 @@ if [ $is_base -eq 1 ]; then
    # echo "@chromium --start-fullscreen --disable-infobars http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
    echo "@chromium --kiosk --disable-restore-session-state http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
    
-   cd ~/boomer
-   git clone https://github.com/${GITHUB_USER}/drills
-
    cd ~/repos
+   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/drills
    git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
    git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    ./ui-webserver/make-links.sh
-
+   cd ~/boomer
+   ln -s ~/repos/drills .
+   ln -s execs/bcam.out .
+fi
   systemctl --user enable base_gui.service
 fi
 
 if [ $is_spkr -ne 1 ]; then
    # get audio files;
+   cd ~/repos
+   git clone https://github.com/${GITHUB_USER}/audio
    cd ~/boomer
-   # rsync -azh base:/home/pi/repos/audio .
-   # if [ $? -ne 0 ]; then
-   #    printf "rsync of audio directory failed.\n"
-   # fi
-   sudo -u ${user_id} git clone https://github.com/${GITHUB_USER}/audio
+   ln -s audio ~/repos/audio
+   ln -s execs/bspkr.out .
 fi
 
 #the following is required to have the base/cam service start when not logged in

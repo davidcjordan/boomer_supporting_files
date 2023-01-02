@@ -7,8 +7,11 @@ alias scap='function _scap(){ sudo setcap "cap_sys_nice=eip" $1; };_scap'
 alias bps='ps -e | grep -E --color=none cam\|base'
 alias temp='/usr/bin/vcgencmd measure_temp'
 
-alias basesync='scp /home/pi/boomer/staged/base*.out pi@base:/home/pi/boomer/staged'
-alias bcamsync='scp /home/pi/boomer/staged/bcam*.out pi@base:/home/pi/boomer/staged'
+#alias basesync='scp /home/pi/boomer/staged/base*.out pi@base:/home/pi/boomer/staged'
+#alias bcamsync='scp /home/pi/boomer/staged/bcam*.out pi@base:/home/pi/boomer/staged'
+alias basesync='~/repos/boomer_supporting_files/basesync.sh'
+alias bcamsync='~/repos/boomer_supporting_files/basesync.sh'
+
 alias drillsync='rsync -avhe ssh --del --exclude=.git --exclude=__pycache__ ~/repos/drills base:repos'
 alias bclean='rm -v /home/pi/repos/launcher/build/CMakeFiles/*/*.o; rm -v /home/pi/repos/boomer_cam/build/CMakeFiles/*/*.o'
 

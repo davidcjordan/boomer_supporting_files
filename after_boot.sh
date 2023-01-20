@@ -205,7 +205,8 @@ if [ $is_base -eq 1 ]; then
    ./ui-webserver/make-links.sh
    cd ~/boomer
    ln -s ~/repos/drills .
-   ln -s execs/bcam.out .
+   ln -s execs/bbase.out .
+   ln -s ${source_dir}/dont_blank_screen.sh .
 fi
   systemctl --user enable base_gui.service
 fi

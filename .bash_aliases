@@ -5,6 +5,7 @@ alias blog='tail -f /run/shm/boomer.log'
 alias vlog='less /run/shm/boomer.log'
 alias clog='rm /run/shm/boomer.log'
 slog() { egrep -i $@ /run/shm/boomer.log; }
+alias bt="~/repos/control_ipc_utils/bt.py"
 
 alias scap='function _scap(){ sudo setcap "cap_sys_nice=eip" $1; };_scap'
 alias bps='ps -e | grep -E --color=none cam\|base'

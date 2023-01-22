@@ -59,8 +59,10 @@ if __name__ == '__main__':
 
    if (cam_names[pkt_index] == cam_names[pkt_index+1]):
       print(f"Error: first & second timestamps are from the same camera={cam_names[pkt_index]}")
-   elif (timestamp_diff_micros[pkt_index+1] < FRAME_DIFF_MICROS - FUDGE_MICROS):
-      print(f"Error: the 3rd timestamp is only {timestamp_diff_micros[pkt_index+1]} micros from the 2nd")
+   elif (pkt_index == 0) and (timestamp_diff_micros[1] < FRAME_DIFF_MICROS - FUDGE_MICROS):
+         print(f"Error: the 3rd timestamp is only {timestamp_diff_micros[pkt_index+1]} micros from the 2nd")
+   elif (pkt_index == 1) and (timestamp_diff_micros[0] < FRAME_DIFF_MICROS - FUDGE_MICROS):
+         print(f"Error: the 1st timestamp is only {timestamp_diff_micros[pkt_index+1]} micros from the 2nd")
    elif (frame_numbers[pkt_index] != frame_numbers[pkt_index+1]):
       print(f"Cameras NOT in sync: cam={cam_names[pkt_index]}, frame={frame_numbers[pkt_index]} received 1st; {cam_names[pkt_index+1]}, frame={frame_numbers[pkt_index+1]} received {timestamp_diff_micros[pkt_index]} micros later")
    else:

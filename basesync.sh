@@ -14,7 +14,13 @@ fi
 
 # printf "called with: $0, scp ${filename}.out to base-${id}\n"
 
-scp /home/pi/boomer/staged/${filename}.out pi@base-$id:/home/pi/boomer/staged
+if [ $id == 0 ]; then
+   # use ethernet
+   scp -o ConnectTimeout=10 /home/pi/boomer/staged/${filename}.out pi@192.168.0.42:/home/pi/boomer/staged
+else
+   scp -o ConnectTimeout=10 /home/pi/boomer/staged/${filename}.out pi@base-$id:/home/pi/boomer/staged
+fi
+
 if [ $? -ne 0 ]; then
    printf "Failed: scp of ${filename}.out to base-$id\n"
 fi

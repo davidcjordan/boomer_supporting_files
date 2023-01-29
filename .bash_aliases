@@ -6,6 +6,7 @@ alias vlog='less /run/shm/boomer.log'
 alias clog='rm /run/shm/boomer.log'
 slog() { egrep -i $@ /run/shm/boomer.log; }
 alias bt="~/repos/control_ipc_utils/bt.py"
+alias report="~/repos/boomer_supporting_files/email_log.sh"
 
 alias checksync='sudo tcpdump -i wlan1 -x -c3 not arp | egrep "left|right|0x0010" | ~/repos/boomer_supporting_files/cam_sync_check.py'
 

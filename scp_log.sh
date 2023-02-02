@@ -36,6 +36,21 @@ if [ "$2" == "frame_even.dat" ] || [ "$2" == "frame_odd.dat" ]; then
   exit 0
 fi
 
+# on base: write_sheet with score
+if [ "$2" == "score_update.json" ]; then
+  printf "updating google score sheet\n"
+  cd ~/repos/boomer_supporting_files
+  source venv/bin/activate
+  python3 score_update.py $1 $2
+  if [ $? -eq 0 ]; then
+    printf "OK: score sheet updated\n"
+  else
+    printf "Failed: score sheet updated\n" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
 user_id="pi"
 log_dir="/home/${user_id}/boomer/logs/"
 shm_dir="/run/shm"
@@ -70,18 +85,6 @@ else
   # camera or speaker files:
   dest_ip="base"
   dest="${user_id}@${dest_ip}:${shm_dir}"
-  # the following delays didn't seem to work - so adding the delays in the cam code instead
-  # if [ "$1" == "/run/shm" ] && [ $extension == "dat" ]; then
-  #   printf "Adding sleep before sending video file."
-  #   if [ $(hostname) == "right" ]; then
-  #     printf "Adding sleep for right camera."
-  #     # wait for left to transfer the video
-  #     sleep 49
-  #   else
-  #     printf "Adding sleep for left camera."
-  #     sleep 3 # wait for .log files to be transferred
-  #   fi
-  # fi
   scp "$1/$2" $dest
   if [ $? -eq 0 ]; then
     printf "OK: scp $1/$2 $dest\n"

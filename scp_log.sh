@@ -16,12 +16,18 @@ then
  exit 1
 fi
 
+if [[ $2 == *"chromium"* ]]; then
+ printf "skipping handling of file: $2\n"
+ exit 0
+fi
+
 extension="${2##*.}"
 # printf "file extension: $extension\n"
 if [[ $2 == *"boomer.log"* ]] || [ $extension == "fifo" ] || [ $extension == "png" ] || [[ $2 == *"intensity.log"* ]]; then
  printf "skipping handling of file: $2\n"
  exit 0
 fi
+
 
 # on camera: convert frame data to PNG files
 if [ "$2" == "frame_even.dat" ] || [ "$2" == "frame_odd.dat" ]; then

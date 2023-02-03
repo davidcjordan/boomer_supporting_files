@@ -211,7 +211,8 @@ fi
   systemctl --user enable base_gui.service
 fi
 
-if [ $is_spkr -ne 1 ]; then
+if [ $is_spkr -eq 1 ]; then
+   sudo apt --yes get mpg123
    # get audio files;
    cd ~/repos
    git clone https://github.com/${GITHUB_USER}/audio

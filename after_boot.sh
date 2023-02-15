@@ -120,8 +120,8 @@ echo "${USER}" | sudo tee -a /etc/incron.allow
 incrontab ${source_dir}/incrontab.txt
 
 # disable unused services
-sudo systemctl stop bluetooth.service
-sudo systemctl disable bluetooth.service
+#sudo systemctl stop bluetooth.service
+#sudo systemctl disable bluetooth.service
 sudo systemctl stop avahi-daemon.service
 sudo systemctl disable avahi-daemon.service
 sudo systemctl stop dphys-swapfile.service
@@ -130,8 +130,8 @@ sudo systemctl stop triggerhappy.service
 sudo systemctl disable triggerhappy.service
 sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
-sudo systemctl stop alsa-state.service
-sudo systemctl disable alsa-state.service
+# sudo systemctl stop alsa-state.service
+# sudo systemctl disable alsa-state.service
 if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
    printf "disabling systemd-timesyncd.service\n"
    sudo systemctl stop systemd-timesyncd.service

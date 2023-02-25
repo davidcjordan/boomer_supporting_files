@@ -16,6 +16,9 @@ while true; do
   # test if string is not empty
   if [[ $bt_device_id ]]; then
     # printf "paired with '$bt_device_id'\n"
+    if [[ ! -f $filepath ]]; then
+      printf "$bt_device_id 0" > $filepath #create file if it doesn't exist, which happens on boot
+    fi
     bluetoothctl trust $bt_device_id > /dev/null
     if [ $? -eq 0 ]; then
       # printf "trusted '$bt_device_id'\n"

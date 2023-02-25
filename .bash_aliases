@@ -40,8 +40,8 @@ alias pulse21='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pw
 alias pic2="ssh pi@base-2 'cd /tmp; scp left:/run/shm/frame_even.png frame.png; convert -resize 75% frame.png frame.jpeg'; scp pi@base-2:/tmp/frame.jpeg .; gpicview frame.jpeg"
 alias pic1="ssh pi@base-1 'cd /tmp; scp left:/run/shm/frame_even.png frame.png; convert -resize 75% frame.png frame.jpeg'; scp pi@base-1:/tmp/frame.jpeg .; gpicview frame.jpeg"
 
-alias stopall='ssh left systemctl --user stop boomer.service; ssh right systemctl --user stop boomer.service; ssh spkr systemctl --user stop boomer.service; systemctl --user stop boomer.service; pkill -o chromium; systemctl --user stop base_gui.service'
-alias haltall='ssh left sudo halt; ssh right sudo halt; ssh spkr sudo halt; sudo halt'
+alias stopall='ssh left systemctl --user stop boomer.service; ssh right systemctl --user stop boomer.service; systemctl --user stop boomer.service; pkill -o chromium; systemctl --user stop base_gui.service'
+alias haltall='ssh left sudo halt; ssh right sudo halt; sudo halt'
 
 alias uiv='cd ~/repos/ui-webserver; . venv/bin/activate'
 #alias uig='gunicorn -k eventlet -b 0.0.0.0:1111 "app:create_app()"'

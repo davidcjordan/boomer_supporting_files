@@ -1,0 +1,14 @@
+[Unit]
+Description=Run bluetooth script to connect to speaker
+
+[Service]
+Type=simple
+ExecStart=/home/pi/repos/boomer_supporting_files/bt_audio_enable.sh
+WorkingDirectory=/home/pi/boomer
+Restart=always
+#Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+

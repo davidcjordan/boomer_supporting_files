@@ -1,0 +1,12 @@
+[Unit]
+Description=send mail on network up
+#refer to: https://unix.stackexchange.com/questions/216919/how-can-i-make-my-user-services-wait-till-the-network-is-online
+
+[Service]
+Type=oneshot
+ExecStart=sh -c 'while ! ping -c1 tennisrobot.com; do sleep 3; done; echo powered | mutt -s "powered-up" roi.co.4444@gmail.com'
+#ExecStart=sh -c 'while true; do sleep 2; echo here; done'
+#ExecStart=sh -c 'while ! ping -c 1 example.com; do sleep 1; done'
+
+[Install]
+WantedBy=default.target

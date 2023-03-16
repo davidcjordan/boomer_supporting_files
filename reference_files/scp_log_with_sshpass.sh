@@ -28,13 +28,11 @@ do
   ((LineNum++))
 done < "$input_file"
 
-
 #echo "sshpass -f ${input_file} scp $1 ${user}@${IP}:${dest}"
 #exit 0
-#sshpass -f $input_file scp "$1" tom@192.168.0.100:/Users/tom/boomer_logs/
 
 # the following is when enet is connected:
-scp "$1" pi@192.168.0.40:/home/pi/boomer/logs/
+scp "$1" pi@192.168.28.40:/home/pi/boomer/logs/
 # the following is to transfer to the base, which will relay them to dave
 #scp "$1" pi@192.168.27.2:/home/pi/boomer/logs/
 if [ $? -eq 0 ]

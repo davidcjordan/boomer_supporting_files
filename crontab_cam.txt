@@ -1,4 +1,5 @@
 @reboot sleep 20; ~/repos/boomer_supporting_files/setdate.sh
 3 3 * * * ~/repos/boomer_supporting_files/setdate.sh
+1 4 * * * sudo reboot
 # the preceeding line runs at 3 AM; the following was used for testing - use journalctl -f to see execution
 #*/1 * * * * ~/setdate.sh > /home/pi/boomer/script_logs/set_date.log 2>&1 | logger -t mycmd

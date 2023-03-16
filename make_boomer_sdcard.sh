@@ -52,7 +52,7 @@ fi
 # configure IP addresses to be used in dhcpcd.conf
 if [ -z $3 ]; then
    # normal case (using Daves enet switch)
-   eth_ip_A_B_C="192.168.0."
+   eth_ip_A_B_C="192.168.28."
    if [ $is_base -eq 1 ]; then
        eth_ip_D="42"
    elif [[ $1 == "left"* ]]; then

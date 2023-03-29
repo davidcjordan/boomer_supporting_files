@@ -33,16 +33,18 @@ while true; do
       if [[ "$conn_status" == "no" ]]; then
         printf "$bt_device_id 0" > $filepath
       else
-        rssi_string=$(hcitool rssi $bt_device_id)
-        # hcitool has an exit code of 1 if the device is not connected
-        if [ $? -eq 0 ]; then
-          # printf "rssi_string= '$rssi_string'\n"
-          rssi=$(echo $rssi_string | awk ' { print $4 } ')
-          # printf "rssi= $rssi\n"
-          printf "$bt_device_id $rssi" > $filepath
-        else
-          printf "$bt_device_id 0" > $filepath
-        fi
+        printf "$bt_device_id 33" > $filepath
+      # NOT checking signal strength because it interferes with the audio stream
+      #   rssi_string=$(hcitool rssi $bt_device_id)
+      #   # hcitool has an exit code of 1 if the device is not connected
+      #   if [ $? -eq 0 ]; then
+      #     # printf "rssi_string= '$rssi_string'\n"
+      #     rssi=$(echo $rssi_string | awk ' { print $4 } ')
+      #     # printf "rssi= $rssi\n"
+      #     printf "$bt_device_id $rssi" > $filepath
+      #   else
+      #     printf "$bt_device_id 0" > $filepath
+      #   fi
       fi
     fi
   else

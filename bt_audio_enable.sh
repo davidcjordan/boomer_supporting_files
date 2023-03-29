@@ -29,11 +29,24 @@ while true; do
         bluetoothctl connect $bt_device_id > /dev/null
         conn_status=$(bluetoothctl info $bt_device_id | grep Connected | awk ' { print $2 } ')
       fi
+
       # at this point, should either be connected or not
+
       if [[ "$conn_status" == "no" ]]; then
-        printf "$bt_device_id 0" > $filepath
+        status="0"
       else
-        printf "$bt_device_id 33" > $filepath
+        status="3"
+      fi
+
+      if [ ! -f "$filepath" ]; then
+          printf "$bt_device_id $status" > $filepath
+      else
+        # only write file if connection status has changed
+        line=$(<$filepath)
+        if [[ ${line: -1} != $status ]]; then
+          printf "$bt_device_id $status" > $filepath
+        fi
+
       # NOT checking signal strength because it interferes with the audio stream
       #   rssi_string=$(hcitool rssi $bt_device_id)
       #   # hcitool has an exit code of 1 if the device is not connected

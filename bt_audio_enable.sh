@@ -19,6 +19,13 @@ while true; do
     if [[ ! -f $filepath ]]; then
       printf "$bt_device_id 0" > $filepath #create file if it doesn't exist, which happens on boot
     fi
+
+    # as the system boots, then bluetooth will return 'default' as the device ID
+    line=$(<$filepath)
+    if [[ ${line:0:7} != ${bt_device_id:0:7} ]]; then
+      rm -f $filepath
+    fi
+
     bluetoothctl trust $bt_device_id > /dev/null
     if [ $? -eq 0 ]; then
       # printf "trusted '$bt_device_id'\n"

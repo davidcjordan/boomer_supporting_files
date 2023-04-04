@@ -3,9 +3,10 @@
 # if there are no paired devices, then it deletes the file to indicate that condition
 
 if [[ $1 ]]; then
- sleep_duration=$1
+  sleep_duration=$1
+  # printf "setting sleep_duration=$sleep_duration\n"
 else
- sleep_duration=2
+  sleep_duration=2
 fi
 
 printf "bt_audio_enable.sh started: sleep_duration=$sleep_duration arg2=$2\n" >&2
@@ -13,6 +14,12 @@ printf "bt_audio_enable.sh started: sleep_duration=$sleep_duration arg2=$2\n" >&
 filepath="/run/shm/bt_speaker.fifo"
 while true; do
   bt_device_id=$(bluetoothctl paired-devices | awk ' { print $2 } ')
+  if [ $? -ne 0 ]; then
+    printf "bluetoothctl failed; returned {$?}\n"
+    sleep 10
+    rm -f $filepath
+  fi
+
   # test if string is not empty
   if [[ $bt_device_id ]]; then
     # printf "paired with '$bt_device_id'\n"

@@ -181,6 +181,7 @@ if [ $is_base -eq 1 ]; then
    sudo cp ${source_dir}/dnsmasq.conf /etc/dnsmasq.conf
    sudo systemctl unmask hostapd.service 
    sudo apt --yes install gpiod
+   sudo apt --yes install mutt  #mail client used to email power-on or reports
    sudo apt --yes install imagemagick  #used to change PNG to JPEG using the convert command
    # install stuff for python web-server
    python3 -m venv venv

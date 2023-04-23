@@ -1,4 +1,17 @@
 # boomer_supporting_files
+## Overview
+It is assumed the reader understands there are 3 Raspberry Pi's running Linux (the base and the 2 cameras; previously there was a speaker RPi, but that has been replaced by using a bluetooth speaker). The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
+
+The topics covered in this file are:
+- making SD cards and/or images
+  - scripts
+  - .conf files
+- process control (systemd)
+  - various services that run the base & camera
+- installing a new system
+- software upgrade
+
+## Making SD cards and images
 There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
 - These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
   - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
@@ -11,7 +24,7 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
 
 The repository contains config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts.
  
-## Notes:
+### Notes:
 Here is the timing of making an SD-card with the scripts:
 * imager: about 10 minutes
 * make_boomer_sdcard: less than a minute
@@ -42,38 +55,45 @@ After flashing the above image, use the following command to increase the root f
 ```
 sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2
 ```
-## Directory structure of boomer base, cameras and spkr
+### Directory structure of boomer base and cameras
 ```
 pi@base:~/boomer $ ls -al
-total 116
-drwxr-xr-x 10 pi pi  4096 Jun 25 06:58 .
-drwxr-xr-x 12 pi pi  4096 Jun 24 13:14 ..
-lrwxrwxrwx  1 pi pi    62 May 18 09:36 bbase.out -> /home/pi/execs/bbase.out
--rw-r--r--  1 pi pi   926 May 22 13:16 boomer.service
--rwxr-xr-x  1 pi pi  1703 May 21 04:38 change_version.sh
-drwxrwxrwx  2 pi pi 36864 Jun 24 13:29 drills
-drwxr-xr-x  2 pi pi  4096 Jun 25 06:22 execs
-drwxr-xr-x  2 pi pi  4096 Jun 23 13:50 logs
--rwxr-xr-x  1 pi pi   738 Jun 11 12:22 process_staged_files.sh
--rwxr-xr-x  1 pi pi   791 Jun 19 09:41 scp_log.sh
-drwxr-xr-x  2 pi pi  4096 May 20 12:18 script_logs
-drwxr-xr-x  2 pi pi  4096 Jun 25 06:58 staged
+drwxr-xr-x 12 pi pi      4096 Apr  1 09:44 .
+drwxr-xr-x 34 pi pi      4096 Apr 20 11:36 ..
+lrwxrwxrwx  1 pi pi        26 Apr  1 09:44 audio -> /home/pi/repos/audio
+-rw-r--r--  1 pi pi       613 Apr  4  2022 autostart
+lrwxrwxrwx  1 pi pi        31 Apr 15  2022 bbase.out -> /home/pi/boomer/execs/bbase.out
+lrwxrwxrwx  1 pi pi        56 Feb 28  2022 change_version.sh -> /home/pi/repos/boomer_supporting_files/change_version.sh
+lrwxrwxrwx  1 pi pi        21 Sep  5  2022 drills -> /home/pi/repos/drills
+drwxr-xr-x  2 pi pi      4096 Apr 17 10:15 execs
+drwxr-xr-x  2 pi pi      4096 Mar 12 06:58 logs
+lrwxrwxrwx  1 pi pi        62 Mar 31  2022 process_staged_files.sh -> /home/pi/repos/boomer_supporting_files/process_staged_files.sh
+lrwxrwxrwx  1 pi pi        49 Feb 28  2022 scp_log.sh -> /home/pi/repos/boomer_supporting_files/scp_log.sh
+drwxr-xr-x  2 pi pi      4096 Feb  2 07:22 script_logs
+drwxr-xr-x  2 pi pi      4096 Apr 17 10:15 staged
+drwxr-xr-x  3 pi pi      4096 Apr 18 09:28 this_boomers_data
 ```
-On the base RPi, there is an additional directory ```drills``` which is cloned from: https://github.com/davidcjordan/drills
+An explanation of the directories:
+- execs: executables are stored.  The symbolic link of bbase or bcam from the boomer directory to the executable in the execs directory is a convenience to allow multiple version of the executable if necessary
+- staged: executables are placed in this directory for a software upgrade.  A file monitor (incron) invokes a script to move the executable from the staged: directory to the execs directory, give the file permissions, and restart the base/camera process.
+- logs: stores persisted log files. The files in this directory are erased on boot in order to prevent running out of file space
+- script_logs:  files written to them by the software upgrade scripts or other scripts.
+- this_boomers_data: holds machine specific files such as court points, camera locations, servo parameters, user settings and other config files.  It can contain files used by the User Interface to display the boomer ID, e.g. Boomer #3, etc.
+On the base RPi, there are an additional directories; symbolic links are used to point the drills/audio to the repositories
+- ```drills``` which is cloned from: https://github.com/davidcjordan/drills
 
-On the speaker RPi, there is an additional directory ```audio``` which is cloned from: https://github.com/davidcjordan/audio
+- ```audio``` which is cloned from: https://github.com/davidcjordan/audio
 
-A directory in the home directory ```this_boomers_data``` is also created - it holds machine specific files such as cam_parameters, ball throwing configuration (shot table), and other config files.  It will contain files used by the User Interface to display the boomer ID, e.g. Boomer #3, etc.
+## systemd (launching processes on boot and restarting on failure)
+systemd is used to start and stop the following:
+- boomer.service: the bbase.out process on the base, and bcam.out on the cameras
+- base_gui.service: The user-interface is a web-server using python modules (gunicorn)
+  - the code is in the ~/repos/ui-webserver, which requires ~/repos/control_ipc_utils to be cloned
+- base_bluetooth.service: runs bash script 'bt_audio_enable.sh' that runs a loop checking for a paired bluetooth device
+- mail_on_network.service: enables sending an email when the system boots.  This is used to monitor boomer tests sites and may be removed in the future.
 
-## systemd (launching processes on boot and restarting on failure
-A file, "boomer.service" is placed in ~/.config/systemd/user.  This file controls starting and restarting bbase.
-Once the file is in place (you probably have to create the .config, systemd and user directories) then:
-```
-mkdir -p ~/.config/systemd/user
-systemd --user enable boomer.service
-```
-On the base: There is a base_gui.service in ~/.config/systemd/user which starts the web-server.
-
+The make_boomer_sdcard.sh script creates the ~/.config/systemd/user directory and copies the *.service files into the directory.
+The after_boot.sh script enables the services.
 ## File monitoring (upgrades, log transfers)
 A facility, incrontab, is used to monitor directories for new files and call a script or do some other action.
 
@@ -89,7 +109,7 @@ Refer to the incrontab.txt file for specifics.  But basically there are 3 direct
 * logs directory: to an external support computer; currently uses enet
   * performed by scp_logs.sh
   * for the cams - it transfers the files to base
-  * for the base - it transfers to an external computer, of connected; otherwise it moves them to logs
+  * for the base - it transfers to an external computer, if connected; otherwise it moves them to logs
 * /run/shm directory
   * same as the logs directory
 * staged directory 
@@ -118,6 +138,8 @@ ssh-copy-id left (or right or daves)
 Reference: https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/ or: https://alvinalexander.com/linux-unix/how-use-scp-without-password-backups-copy/
 
 
+### Descriptions of parts of the make_sd_card & after_boot.sh
+The following sections describe what the scripts now do and are for reference only
 ## Base configuration
 ### Networking config:
 - /etc/dhcpcd.conf: static address on enet for debug; static address on wlan1 for hostapd; no settings for wlan0 (built-in) to allow dhcp to connect to user-provided WiFi
@@ -141,8 +163,6 @@ Chromium is launched on startup using /etc/xdg/lxsession/LXDE-pi/autostart:
 * an external mouse messes up the touchscreen input
 * an external keyboard allows the operator to hit 'F11' to exit full screen mode
 
-## Additional details
-The following sections describe what the scripts now do and are for reference only
 ### Install arducam libraries:
 arducam libraries have a dependency on opencv, so that has to be installed (first line below)
 The reference for installing arducam stuff is:  https://github.com/ArduCAM/MIPI_Camera/tree/master/RPI
@@ -176,8 +196,6 @@ refer to: https://github.com/morrownr/88x2bu
 
 ### Disable services
 ```
-sudo systemctl stop bluetooth
-sudo systemctl disable bluetooth
 sudo systemctl stop avahi-daemon
 sudo systemctl disable avahi-daemon
 ```
@@ -210,11 +228,16 @@ tailscale allows ssh'ing to a base unit if it's connected to an internet accessa
 It was selected instead of using ngrok because up to 20 devices are supported for a free account.
 A gmail account 'rio.co.4444@gmail' was created to use as credentials for the devices (boomer base).
 Each base has to have a unique hostname, e.g. base-1, base-2; so the hostnames have to be edited after flashing a base SDcard.
+After the sd-card has booted, the command ```sudo tailscale up``` needs to be run
 
-To install:
-```
-curl -fsSL https://tailscale.com/install.sh | sh
-```
+### install mutt on base
+mutt is a email client: http://www.mutt.org    It is (can be) used to email logs (the report alias) or send an email when the base powers up and connects to the internet.
+
+mutt requires:
+- a mutt configuration file: .muttrc
+  - gets copied from boomer_support_files into /home/pi
+  - edit to update the base name, e.g. base-3
+  - currently has the roi.co.4444@gmail.com authorization code, which should be moved to a different file and encrypted
 
 ### [OLD - left just in case] install ngrok on base
 ngrok allows ssh'ing to a base unit if it's connected to an internet accessable router (wifi or enet).

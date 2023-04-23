@@ -16,8 +16,8 @@
 if [ -z $2 ]; then
  printf "arg 2 (sd card, e.g. sdb or sdc) is empty\n"
  printf "usage: sudo bash make_boomer_sdcard.sh function sdcard\n"
- printf "       where function is one of <base, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
- printf "sudo bash make_boomer_sdcard.sh base sdb\n"
+ printf "       where function is one of <base-N, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
+ printf "sudo bash make_boomer_sdcard.sh base-N sdb\n"
  exit 1
 fi
 
@@ -48,6 +48,11 @@ if [ $is_base -eq 0 ] && [ $is_camera -eq 0 ] &&  [ $is_spkr -eq 0 ]; then
  printf "arg 1 is not one of 'base', 'left','right' or 'spkr' \n"
  exit 1
 fi
+
+if [ $is_base -eq 1 ]; then
+   base_id=${1#*-}
+fi
+printf "base_id=${base_id}\n"
 
 # configure IP addresses to be used in dhcpcd.conf
 if [ -z $3 ]; then
@@ -201,9 +206,16 @@ sudo -u ${user_id} ln -s ${source_dir}/process_staged_files.sh
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir -p .config/systemd/user
 # TODO: make a generic boomer.service and do sed's to change the executable
-if [ $1 == "base" ]; then
+if [ $is_base -eq 1 ]; then
    sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
-   sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user/base_gui.service
+   sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user
+   sudo -u ${user_id} cp -p ${source_dir}/base_bluetooth.service .config/systemd/user
+   sudo -u ${user_id} cp -p ${source_dir}/.muttrc .
+   sed -i "s/NN/${base_id}/" .muttrc
+   # add drivers for USB-bluetooth adapter:
+   sudo curl -s https://raw.githubusercontent.com/Realtek-OpenSource/android_hardware_realtek/rtk1395/bt/rtkbt/Firmware/BT/rtl8761b_fw -o /lib/firmware/rtl_bt/rtl8761b_fw.bin
+   sudo curl -s https://raw.githubusercontent.com/Realtek-OpenSource/android_hardware_realtek/rtk1395/bt/rtkbt/Firmware/BT/rtl8761b_config -o /lib/firmware/rtl_bt/rtl8761b_config.bin
+   sed -i "s/bluetoothd/bluetoothd --noplugin=sap/" /etc/systemd/system/bluetooth.target.wants/bluetooth.service
 else 
    sudo -u ${user_id} cp -p ${source_dir}/cam_boomer.service .config/systemd/user/boomer.service
 fi
@@ -213,6 +225,7 @@ sed -i "s/^exit 0$/#exit 0\n/" ${mount_root_dir}/etc/rc.local
 echo "rm -f \/home\/pi\/boomer\/logs\/*" >> ${mount_root_dir}/etc/rc.local
 # turn on performance mode for the governor
 echo "echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor" >> ${mount_root_dir}/etc/rc.local
+
 # turn on the pulse generator (only needs to be done for Tom's home setup using the RPi pulse)
 if [ $is_camera -eq 1 ]; then
    echo "cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period;" >> ${mount_root_dir}/etc/rc.local
@@ -233,8 +246,8 @@ sudo -u ${user_id} cp -r ${source_dir} .
 # install 5G usb-wifi adapter driver; it will be built with the after-boot script
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
-cd 88x2bu-20210702
-./ARM_RPI.sh
+# the following was required for a previous version of the driver install script:
+# cd 88x2bu-20210702; ./ARM_RPI.sh
 
 if [ $is_camera -eq 1 ]; then
    sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
@@ -264,7 +277,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # the following enables ssh
-# touch ${mount_boot_dir}/ssh
+touch ${mount_boot_dir}/ssh
 
 # DID NOT WORK: the following commands are added to /boot/firstrun.sh
 # refer to /usr/bin/raspi-config
@@ -296,14 +309,15 @@ if [ $is_base -eq 1  ]; then
    # the following is per https://forums.raspberrypi.com/viewtopic.php?t=299193
    # to force hdmi 0 & 1 plugs
    #HOWEVER: don't force both, because then linux will think there are 2, which is unusable
-   echo "#hdmi_mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
 
    echo "#hdmi_ignore_edid:0=0xa5000080" >> ${mount_boot_dir}/config.txt
    # the HDMI needs the force hotplug in order to keep the touchscreen on all the time:
    echo "hdmi_force_hotplug:0=1" >> ${mount_boot_dir}/config.txt
    echo "hdmi_group:0=2" >> ${mount_boot_dir}/config.txt
+   echo "#hdmi_mode 28 is 1280x800" >> ${mount_boot_dir}/config.txt
    echo "hdmi_mode:0=28" >> ${mount_boot_dir}/config.txt
 
+   # the following is to configure hdmi connector #1 - unncessary?
    echo "#hdmi_ignore_edid:1=0xa5000080" >> ${mount_boot_dir}/config.txt
    echo "#hdmi_force_hotplug:1=1" >> ${mount_boot_dir}/config.txt
    echo "#hdmi_group:1=2" >> ${mount_boot_dir}/config.txt
@@ -313,6 +327,8 @@ if [ $is_base -eq 1  ]; then
    # echo "hdmi_mode=28" >> ${mount_boot_dir}/config.txt
    # the following is necessary for the tachometer, which uses UART 2
    echo "dtoverlay=uart2" >> ${mount_boot_dir}/config.txt
+   # the following is for the USB Bluetooth adapter
+   echo "dtoverlay=disable-bt" >> ${mount_boot_dir}/config.txt
 fi
 
 cd

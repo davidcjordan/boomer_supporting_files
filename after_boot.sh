@@ -5,17 +5,23 @@
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
+if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
+   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
+   exit 1
+fi
+
+ping -c1 raspbian.raspberrypi.org
+if [ $? -ne 0 ]; then
+   printf "Not connected to the internet\n"
+   exit 1
+fi
+
 if [[ $(hostname) == "base"* ]]; then 
    is_base=1
 else
    is_base=0
 fi
 # printf "is_base=${is_base}\n"
-
-if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
-   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
-   exit 1
-fi
 
 if [[ $(hostname) =~ ^(left|right)$ ]]; then 
    is_camera=1
@@ -28,9 +34,9 @@ if [[ $(hostname) == "spkr"* ]]; then
 else
    is_spkr=0
 fi
-# printf "is_base=${is_base}\n"
 
 user_id="pi"
+echo "pi:readysetcrash" | sudo chpasswd
 
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
@@ -63,14 +69,15 @@ fi
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
 # change the wpa_supplicant from the one installed by the imager advanced options, to the one that support BOOM_NET
-if [ -e wpa_supplicant/wpa_supplicant.conf ]; then
-   mv wpa_supplicant/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf-original
+cd /etc/wpa_supplicant
+if [ -e wpa_supplicant.conf ]; then
+   sudo mv wpa_supplicant.conf wpa_supplicant.conf-original
 fi
 
 if [ $is_base -eq 1 ]; then
-   cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
+   sudo cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant.conf
 else
-   cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant/wpa_supplicant.conf
+   sudo cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant.conf
 fi
 if [ $? -ne 0 ]; then
    printf "copy wpa_supplicant failed.\n"
@@ -79,6 +86,7 @@ fi
 
 #enable wifi:  NOTE: this should have already been done by the imager advanced options
 rfkill unblock wifi
+rfkill unblock bluetooth
 
 # without update, then install libopencv will fail
 sudo apt update && sudo apt --yes upgrade
@@ -91,6 +99,7 @@ if [ $is_spkr -ne 1 ]; then
    sudo apt --yes install dkms
    cd ~/repos/88x2bu-20210702
    sudo ./install-driver.sh NoPrompt
+   sudo sed -i "s/rtw_power_mgnt=1/rtw_power_mgnt=0/" /etc/modprobe.d/88x2bu.conf
 fi
 
 # use vi as an editor for crontab
@@ -120,8 +129,6 @@ echo "${USER}" | sudo tee -a /etc/incron.allow
 incrontab ${source_dir}/incrontab.txt
 
 # disable unused services
-#sudo systemctl stop bluetooth.service
-#sudo systemctl disable bluetooth.service
 sudo systemctl stop avahi-daemon.service
 sudo systemctl disable avahi-daemon.service
 sudo systemctl stop dphys-swapfile.service
@@ -130,13 +137,13 @@ sudo systemctl stop triggerhappy.service
 sudo systemctl disable triggerhappy.service
 sudo systemctl stop hciuart.service
 sudo systemctl disable hciuart.service
-sudo systemctl stop alsa-state.service
-sudo systemctl disable alsa-state.service
-if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
-   printf "disabling systemd-timesyncd.service\n"
-   sudo systemctl stop systemd-timesyncd.service
-   sudo systemctl disable systemd-timesyncd.service
-fi
+# sudo systemctl stop alsa-state.service
+# sudo systemctl disable alsa-state.service
+# if [ $is_camera -eq 1 ] || [ $(hostname) == 'spkr' ]; then
+#    printf "disabling systemd-timesyncd.service\n"
+#    sudo systemctl stop systemd-timesyncd.service
+#    sudo systemctl disable systemd-timesyncd.service
+# fi
 
 # fix locale warning: NOTE: this should have already been done by the imager advanced options
 sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
@@ -169,6 +176,10 @@ if [ $is_camera -eq 1 ]; then
    cd MIPI_Camera/RPI/; make install
    cd ~/boomer
    ln -s execs/bcam.out .
+   # install ntp client so the cameras can get the time from the base:
+   sudo apt --yes apt install ntpdate
+   echo "server 192.168.27.2 prefer iburst" | sudo tee -a /etc/ntp.conf
+   sudo sed -i "s/pool/#pool/" /etc/ntp.conf
 fi
 
 GITHUB_USER=davidcjordan
@@ -182,7 +193,24 @@ if [ $is_base -eq 1 ]; then
    sudo systemctl unmask hostapd.service 
    sudo apt --yes install gpiod
    sudo apt --yes install mutt  #mail client used to email power-on or reports
+
+   # the tailscale service is used to ssh into base-N which are connected to the internet to do maintenance
+   sudo apt --yes install apt-transport-https  #refer to: https://tailscale.com/kb/1025/install-rpi/
+   curl -fsSL https://pkgs.tailscale.com/stable/raspbian/buster.gpg | sudo apt-key add -
+   curl -fsSL https://pkgs.tailscale.com/stable/raspbian/buster.list | sudo tee /etc/apt/sources.list.d/tailscale.list
+   sudo apt --yes install tailscale
+
    sudo apt --yes install imagemagick  #used to change PNG to JPEG using the convert command
+  
+   # install stuff for bluetooth sound (ALSA) used to play WAV files
+   sudo apt install --yes bluez
+   sudo apt install --yes bluez-tools
+   # sudo apt install --yes bluez-firmware
+   # sudo apt install --yes pavucontrol
+
+   #install ntp server so the cameras can get the time from the base:
+   sudo apt --yes install ntp
+
    # install stuff for python web-server
    python3 -m venv venv
    . venv/bin/activate
@@ -201,16 +229,20 @@ if [ $is_base -eq 1 ]; then
    echo "@chromium --kiosk --disable-restore-session-state http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
    
    cd ~/repos
-   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/drills
-   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/control_ipc_utils
+   #public repos:
+   git clone https://github.com/${GITHUB_USER}/drills
+   git clone https://github.com/${GITHUB_USER}/audio
+   git clone https://github.com/${GITHUB_USER}/control_ipc_utils
+   #private repos:
    git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    ./ui-webserver/make-links.sh
    cd ~/boomer
    ln -s ~/repos/drills .
+   ln -s ~/repos/audio .
    ln -s execs/bbase.out .
    ln -s ${source_dir}/dont_blank_screen.sh .
-fi
-  systemctl --user enable base_gui.service
+   systemctl --user enable base_gui.service
+   systemctl --user enable base_bluetooth.service
 fi
 
 if [ $is_spkr -eq 1 ]; then
@@ -239,6 +271,8 @@ if [ $is_camera -eq 1 ] || [$is_spkr -eq 1 ]; then
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"
-printf "    HOWEVER: bcam or bbase.out and the cam_params have to be loaded.\n"
-printf "    To increase the root partition size, do the following commands:\n"
-printf "    sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
+printf "    HOWEVER: "
+printf "      1) bcam.out or bbase.out have to be loaded.\n"
+printf "      2) To increase the root partition size, do the following commands:\n"
+printf "          sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
+printf "      3) enable tailscale: sudo tailscale up\n"

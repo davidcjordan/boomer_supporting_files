@@ -5,11 +5,6 @@
 # base: key copied to cams, daves, speaker
 # daves: key copied base, cams, speaker
 
-if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
-   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
-   exit 1
-fi
-
 ping -c1 raspbian.raspberrypi.org
 if [ $? -ne 0 ]; then
    printf "Not connected to the internet\n"
@@ -22,6 +17,10 @@ else
    is_base=0
 fi
 # printf "is_base=${is_base}\n"
+if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
+   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
+   exit 1
+fi
 
 if [[ $(hostname) =~ ^(left|right)$ ]]; then 
    is_camera=1
@@ -164,9 +163,7 @@ fi
 
 sudo apt --yes install git
 #sudo apt --yes install i2c-dev
-if [ $is_camera -eq 1 ] || [ $is_base -eq 1 ]; then
-   sudo apt --yes install i2c-tools
-fi
+sudo apt --yes install i2c-tools
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
 if [ $is_camera -eq 1 ]; then
@@ -227,6 +224,11 @@ if [ $is_base -eq 1 ]; then
    git clone https://github.com/${GITHUB_USER}/control_ipc_utils
    #private repos:
    git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
+   if [ $? -ne 0 ]; then
+      printf "clone of ui-webserver failed.\n"
+      exit 1
+   fi
+
    # install python packages for python web-server
    cd ui-webserver
    python3 -m venv venv
@@ -254,7 +256,11 @@ if [ $is_base -eq 1 ]; then
    systemctl --user enable base_bluetooth.service
 
    #install capability to write a google sheet for the customer's performance records
-   git clone https://github.com/tmanning/write_sheet
+   git clone https://github.com/manningt/write_sheet
+   if [ $? -ne 0 ]; then
+      printf "clone of write_sheet failed.\n"
+      exit 1
+   fi
    # install python packages for python web-server
    sudo apt --yes install libssl-dev
    cd write_sheet
@@ -265,7 +271,7 @@ if [ $is_base -eq 1 ]; then
    source "$HOME/.cargo/env"
    pip3 install PyOpenSSL
    pip3 install gspread
-
+   deactivate
 fi
 
 if [ $is_spkr -eq 1 ]; then

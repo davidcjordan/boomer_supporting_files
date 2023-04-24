@@ -146,7 +146,7 @@ sudo systemctl disable hciuart.service
 # fi
 
 # fix locale warning: NOTE: this should have already been done by the imager advanced options
-sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
 if [ $? -ne 0 ]; then
    printf "enable of en_US in /etc/locale.gen failed.\n"
 fi
@@ -202,11 +202,9 @@ if [ $is_base -eq 1 ]; then
 
    sudo apt --yes install imagemagick  #used to change PNG to JPEG using the convert command
   
-   # install stuff for bluetooth sound (ALSA) used to play WAV files
-   sudo apt install --yes bluez
-   sudo apt install --yes bluez-tools
-   # sudo apt install --yes bluez-firmware
-   # sudo apt install --yes pavucontrol
+   # install stuff for bluetooth sound (ALSA) used to play WAV files; it installs bluez
+   sudo apt install --yes bluealsa
+   # sudo apt install --yes bluez-tools
 
    #install ntp server so the cameras can get the time from the base:
    sudo apt --yes install ntp
@@ -242,18 +240,36 @@ if [ $is_base -eq 1 ]; then
    cd ~/boomer
    ln -s ~/repos/drills .
    ln -s execs/bbase.out .
+   # the following is necessary to not have the screen blank
    ln -s ${source_dir}/dont_blank_screen.sh .
+   crontab ${source_dir}/crontab_cam.txt
+
    # fill audio directory with wav files:
    mkdir audio
    cd ~/repos/audio
-   for f in *.mp3; do mpg123 -vm2 -w "/home/${USER}/boomer/audio/${f%.mp3}.WAV" "$f"; done
+   sudo apt --yes install mpg123
+   for f in *.mp3; do mpg123 -q -vm2 -w "/home/${USER}/boomer/audio/${f%.mp3}.WAV" "$f"; done
 
    systemctl --user enable base_gui.service
    systemctl --user enable base_bluetooth.service
+
+   #install capability to write a google sheet for the customer's performance records
+   git clone https://github.com/tmanning/write_sheet
+   # install python packages for python web-server
+   sudo apt --yes install libssl-dev
+   cd write_sheet
+   python3 -m virtualenv venv_sheets
+   source ./venv_sheets/bin/activate
+   pip3 install oauth2client
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   source "$HOME/.cargo/env"
+   pip3 install PyOpenSSL
+   pip3 install gspread
+
 fi
 
 if [ $is_spkr -eq 1 ]; then
-   sudo apt --yes get mpg123
+   sudo apt --yes install mpg123
    # get audio files;
    cd ~/repos
    git clone https://github.com/${GITHUB_USER}/audio

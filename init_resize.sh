@@ -57,7 +57,7 @@ get_variables () {
 
   ROOT_DEV_SIZE=$(cat "/sys/block/${ROOT_DEV_NAME}/size")
   #TARGET_END=$((ROOT_DEV_SIZE - 1))  Using the following line to set the target to 4GB; the number of 512 byte blocks
-  TARGET_END=8400000
+  TARGET_END=9000000
 
   PARTITION_TABLE=$(parted -m "$ROOT_DEV" unit s print | tr -d 's')
 

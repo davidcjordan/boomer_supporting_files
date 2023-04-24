@@ -1,0 +1,6 @@
+@reboot sh /home/pi/boomer/dont_blank_screen.sh > /home/pi/boomer/script_logs/dont_blank_screen.log 2>&1
+#
+# For example, you can run a backup of all your user accounts at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+#
+# m h  dom mon dow   command

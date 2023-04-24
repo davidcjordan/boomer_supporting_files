@@ -211,12 +211,6 @@ if [ $is_base -eq 1 ]; then
    #install ntp server so the cameras can get the time from the base:
    sudo apt --yes install ntp
 
-   # install stuff for python web-server
-   python3 -m venv venv
-   . venv/bin/activate
-   python3 -m pip install gunicorn==20.1.0 eventlet==0.30.2
-   python3 -m pip install flask
-   python3 -m pip install flask-socketio <-appears to be included with flask
    #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
    #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
    # need to disable the 'Restore Chromium' refer to: https://raspberrypi.stackexchange.com/questions/68734/how-do-i-disable-restore-pages-chromium-didnt-shut-down-correctly-prompt#85827
@@ -235,12 +229,25 @@ if [ $is_base -eq 1 ]; then
    git clone https://github.com/${GITHUB_USER}/control_ipc_utils
    #private repos:
    git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
+   # install python packages for python web-server
+   cd ui-webserver
+   python3 -m venv venv
+   . venv/bin/activate
+   python3 -m pip install gunicorn==20.1.0 eventlet==0.30.2
+   python3 -m pip install flask
+   python3 -m pip install flask-socketio
    ./ui-webserver/make-links.sh
+   deactivate
+   
    cd ~/boomer
    ln -s ~/repos/drills .
-   ln -s ~/repos/audio .
    ln -s execs/bbase.out .
    ln -s ${source_dir}/dont_blank_screen.sh .
+   # fill audio directory with wav files:
+   mkdir audio
+   cd ~/repos/audio
+   for f in *.mp3; do mpg123 -vm2 -w "/home/${USER}/boomer/audio/${f%.mp3}.WAV" "$f"; done
+
    systemctl --user enable base_gui.service
    systemctl --user enable base_bluetooth.service
 fi

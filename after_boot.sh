@@ -144,8 +144,9 @@ sudo systemctl disable hciuart.service
 #    sudo systemctl disable systemd-timesyncd.service
 # fi
 
-# fix locale warning: NOTE: this should have already been done by the imager advanced options
+# fix locale warning:
 sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
 if [ $? -ne 0 ]; then
    printf "enable of en_US in /etc/locale.gen failed.\n"
 fi
@@ -244,7 +245,7 @@ if [ $is_base -eq 1 ]; then
    ln -s execs/bbase.out .
    # the following is necessary to not have the screen blank
    ln -s ${source_dir}/dont_blank_screen.sh .
-   crontab ${source_dir}/crontab_cam.txt
+   crontab ${source_dir}/crontab_base.txt
 
    # fill audio directory with wav files:
    mkdir audio
@@ -267,11 +268,13 @@ if [ $is_base -eq 1 ]; then
    python3 -m virtualenv venv_sheets
    source ./venv_sheets/bin/activate
    pip3 install oauth2client
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   source "$HOME/.cargo/env"
    pip3 install PyOpenSSL
    pip3 install gspread
    deactivate
+   # the following is commented out because it requires too much disk & it is interactive.
+   # ? If it is still required, it can be done on installation, along with the write_sheets config
+   # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   # source "$HOME/.cargo/env"
 fi
 
 if [ $is_spkr -eq 1 ]; then
@@ -296,7 +299,16 @@ systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
 if [ $is_camera -eq 1 ] || [$is_spkr -eq 1 ]; then
-   crontab ${source_dir}/crontab_cam.txt
+   # crontab ${source_dir}/crontab_cam.txt
+   sudo apt --yes install ntp
+   if [ $? -ne 0 ]; then
+      printf "install of ntp client failed.\n"
+   fi
+   sudo sed -i "s/#server ntp.your-provider.example/server 192.168.27.2 prefer iburst/" /etc/ntp.conf
+   if [ $? -ne 0 ]; then
+      printf "configuration ntp client failed.\n"
+   fi
+   sudo sed -i "s/pool/# pool/" /etc/ntp.conf
 fi
 
 printf "\n  Success - the sd-card has been configured.\n"

@@ -8,6 +8,7 @@ alias clog='rm /run/shm/boomer.log'
 slog() { egrep -i $@ /run/shm/boomer.log; }
 alias bt="~/repos/control_ipc_utils/bt.py"
 alias report="~/repos/boomer_supporting_files/email_log.sh"
+alias make_mp3_all='cd ~/repos/audio; for f in *.mp3; do mpg123 -m -2 -q -w "/home/pi/boomer/audio/${f%.mp3}.WAV" "$f"; done; echo done'
 
 alias checksync='sudo tcpdump -i wlan1 -x -c3 not arp | egrep "left|right|0x0010" | ~/repos/boomer_supporting_files/cam_sync_check.py'
 
@@ -20,7 +21,8 @@ alias temp='/usr/bin/vcgencmd measure_temp'
 alias basesync='~/repos/boomer_supporting_files/basesync.sh'
 alias bcamsync='~/repos/boomer_supporting_files/bcamsync.sh'
 
-alias drillsync='rsync -avhe ssh --del --exclude=.git --exclude=__pycache__ ~/repos/drills base:repos'
+alias get_idf='. $HOME/esp/esp-idf/export.sh'
+
 alias bclean='rm -v /home/pi/repos/launcher/build/CMakeFiles/*/*.o; rm -v /home/pi/repos/boomer_cam/build/CMakeFiles/*/*.o'
 
 alias uistop='systemctl --user stop base_gui.service'

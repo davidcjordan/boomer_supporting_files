@@ -8,7 +8,7 @@ alias clog='rm /run/shm/boomer.log'
 slog() { egrep -i $@ /run/shm/boomer.log; }
 alias bt="~/repos/control_ipc_utils/bt.py"
 alias report="~/repos/boomer_supporting_files/email_log.sh"
-alias make_mp3_all='cd ~/repos/audio; for f in *.mp3; do mpg123 -m -2 -q -w "/home/pi/boomer/audio/${f%.mp3}.WAV" "$f"; done; echo done'
+alias make_wav_all='cd ~/repos/audio; for f in *.mp3; do mpg123 -m -2 -q -w "/home/pi/boomer/audio/${f%.mp3}.WAV" "$f"; done; echo done'
 
 alias checksync='sudo tcpdump -i wlan1 -x -c3 not arp | egrep "left|right|0x0010" | ~/repos/boomer_supporting_files/cam_sync_check.py'
 

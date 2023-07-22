@@ -1,6 +1,6 @@
 # boomer_supporting_files
 ## Overview
-It is assumed the reader understands there are 3 Raspberry Pi's running Linux (the base and the 2 cameras; previously there was a speaker RPi, but that has been replaced by using a bluetooth speaker). The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
+It is assumed the reader understands there are 3 Raspberry Pi's running Linux (the base and the 2 cameras. The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
 
 The topics covered in this file are:
 - making SD cards and/or images
@@ -10,6 +10,9 @@ The topics covered in this file are:
   - various services that run the base & camera
 - installing a new system
 - software upgrade
+- aliases & scripts to minimize typing on frequently performed operations, or to help Dave
+
+This repository contains config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts.
 
 ## Making SD cards and images
 There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 
@@ -22,7 +25,6 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
     - these settings can be saved and used on multiple runs if the imager
   - ! the scripts should be run as sudo, like this: ```sudo bash make_boomer_sdcard.sh base sdb```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 
-The repository contains config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts.
  
 ### Notes:
 Here is the timing of making an SD-card with the scripts:
@@ -60,7 +62,7 @@ sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2
 pi@base:~/boomer $ ls -al
 drwxr-xr-x 12 pi pi      4096 Apr  1 09:44 .
 drwxr-xr-x 34 pi pi      4096 Apr 20 11:36 ..
-lrwxrwxrwx  1 pi pi        26 Apr  1 09:44 audio -> /home/pi/repos/audio
+lrwxrwxrwx  1 pi pi        26 Apr  1 09:44 audio
 -rw-r--r--  1 pi pi       613 Apr  4  2022 autostart
 lrwxrwxrwx  1 pi pi        31 Apr 15  2022 bbase.out -> /home/pi/boomer/execs/bbase.out
 lrwxrwxrwx  1 pi pi        56 Feb 28  2022 change_version.sh -> /home/pi/repos/boomer_supporting_files/change_version.sh
@@ -82,7 +84,7 @@ An explanation of the directories:
 On the base RPi, there are an additional directories; symbolic links are used to point the drills/audio to the repositories
 - ```drills``` which is cloned from: https://github.com/davidcjordan/drills
 
-- ```audio``` which is cloned from: https://github.com/davidcjordan/audio
+- ```audio``` the WAV files in this directory are created by using mpg123 to convert the mp3 files in the cloned repository '~/repos/audio'.  An alias 'make_wav_all' iterates through all the MP3s to create WAV files int the boomer/audio directory
 
 ## systemd (launching processes on boot and restarting on failure)
 systemd is used to start and stop the following:
@@ -114,8 +116,8 @@ Refer to the incrontab.txt file for specifics.  But basically there are 3 direct
   * same as the logs directory
 * staged directory 
   * performed by process_staged_files.sh & change_version.sh
-  * scp executables to cameras & speaker staged, and/or move them to the execs directory
-  * sets the executables capabilities and mode
+  * CAM executables that are transferred to the base are scp'd to the cameras staged directory
+  * copies the executables to the 'exec' directory sets the executables capabilities and executable mode
 
 ## Security Config (ssh)
 There is a ~/.ssh directory which holds keys, ssh config, and known_hosts
@@ -217,11 +219,30 @@ add the following line:
 pi ALL=(ALL:ALL) NOPASSWD: /usr/sbin/setcap
 ```
 
-### Install .bash_alias file
-  bash aliases provide shorthand commands for executing common operations on boomer, such as starting/stopping the base or camera and clearing the log.
+### .bash_alias file
+  bash aliases provide shorthand commands for executing common operations on boomer, such as starting/stopping the base or camera and clearing the log.  On the base, or cam, type 'alias' to see the list of aliased commands.
 
-### Install datetime bash command to run via crontab so logging will have correct time on cams, speaker
-  sudo crontab crontab_cam.txt
+  Installations have a symbolic link: /home/pi/.bash_aliases -> /home/pi/repos/boomer_supporting_files/.bash_aliases
+
+  Some utilities that were added to help dave:
+  - base/bcamsync: scp's the bbase or bcam executable from the host RPi to base 'N' where N is the boomer number (1, 2, etc).  It uses tailscale (IP service on the internet) to transfer the files to the base.  Requires wifi to be connected on the base.
+  - vlog and blog: vlog does a 'less' of boomer.log; blog does a 'tail -f' of the log
+  - make_wav_all: converts all the mp3's in the repos/audio to WAV's in the ~/boomer/audio directory
+  
+
+### A cron table (crontab) is installed on the base/cams by the after_boot script
+ - crontab_base runs a script on boot that disables screen blanking
+ - crontab_cam reboots every day in the wee hours.
+  - this is because the cameras would not connect to BOOM_NET after BOOM_NET was not present for a couple of days
+  - it requires the base be setup as a timeserver for the cams to get their date/time using ntp.  This server on the base, and ntp on the cameras are setup by the after_boot script.
+
+### enable score_update on base
+A feature was added to write a google sheet with drill metrics at the end of every drill.  In the future, this may also update a 'game' tab on the same sheet.
+
+At the end of a drill, bbase writes a /run/shm/score_update.json with the metrics.  icrontab invokes score_update.py via the scp_logs.sh script when this file is written.  
+
+A file, 'score_update_config.json' needs to be in this_boomers_data.  It contains 2 key-value pairs: {"score_update_sheet_name": "Tappan_scores", "credentials_filename": "write-drill-scores-tappan-280027e40360.json"}.  The credentials file is downloaded from Google's 
+
 
 ### install tailscale on base
 tailscale allows ssh'ing to a base unit if it's connected to an internet accessable router.

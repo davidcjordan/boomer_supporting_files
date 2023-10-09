@@ -34,18 +34,22 @@ do
    else
       cd ${directory}
       # from: https://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git
-      git remote update
-      file_needs_pull=$(git status -uno | grep -c 'git pull')
-      if [ $file_needs_pull -ne 0 ]; then
-         printf "pulling ${directory}\n"
-         git pull origin
-         if [ $? -ne 0 ]; then
-            printf "FAILED: git pull origin of ~/repos/${directory}\n"
-         else
-            printf "OK: ${directory} has been updated.\n"
-         fi
+      git remote update &> /dev/null
+      if [ $? -ne 0 ]; then
+         printf "FAILED: git remote update for ~/repos/${directory}; skipping update of this repo.\n"
       else
-         printf "${directory} is up to date.\n"
+         file_needs_pull=$(git status -uno | grep -c 'git pull')
+         if [ $file_needs_pull -ne 0 ]; then
+            printf "pulling ${directory}\n"
+            git pull origin --quiet
+            if [ $? -ne 0 ]; then
+               printf "FAILED: git pull origin of ~/repos/${directory}\n"
+            else
+               printf "OK: ${directory} has been updated.\n"
+            fi
+         else
+            printf "${directory} is up to date.\n"
+         fi
       fi
    fi
    cd ~/repos

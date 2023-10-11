@@ -22,3 +22,6 @@ Host spkr
    StrictHostKeyChecking no
    UserKnownHostsFile=/dev/null
 
+Host github.com
+  User git
+  IdentityFile ~/.ssh/davej_ed25519

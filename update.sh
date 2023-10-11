@@ -24,8 +24,7 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-# repo_dirs=( audio drills boomer_supporting_files control_ipc_utils ui-webserver )
-repo_dirs=( audio drills boomer_supporting_files )
+repo_dirs=( audio drills boomer_supporting_files control_ipc_utils ui-webserver )
 
 for directory in "${repo_dirs[@]}"
 do

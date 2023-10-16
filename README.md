@@ -1,6 +1,6 @@
 # boomer_supporting_files
 ## Overview
-It is assumed the reader understands there are 3 Raspberry Pi's running Linux (the base and the 2 cameras. The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
+It is assumed the reader understands there are 3 Raspberry Pi's running Linux: the base and the 2 cameras. The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
 
 The topics covered in this file are:
 - making SD cards and/or images
@@ -13,6 +13,40 @@ The topics covered in this file are:
 - aliases & scripts to minimize typing on frequently performed operations, or to help Dave
 
 This repository contains config files, such as dhcpcd.conf, hostapd.conf, systemd service files, and shell scripts.
+
+Here is a list of files, use-case category and brief description:
+File | Where Installed | Category | Description
+---|---|---|---
+after_boot.sh | NA | make SD | script that runs after linux has been flashed to the SD card
+base_bluetooth.service | base SD | program control | launches bt_audio_enable.sh on base boot
+base_boomer.service | base SD | program control | launches bbase on boot or on a crash
+base_gui.service | base SD | program control | launches webserver for UI
+basesync.sh | NA | sw upgrade | script to scp bbase.out from the staged directory to a base
+bcamsync.sh | NA | sw upgrade | script to scp bbase.out from the staged directory to a base, which then scp's it to cameras.
+bt_audio_enable.sh | base SD | audio  | script that checks whether the paired bluetooth device is connected
+cam_boomer.service | cam SD | program control | launches bcam on boot, software update or crash
+cam_sync_check.py | NA | utility | checks frame numbers received from cams; not used much
+change_version.sh | SD | SW upgrade | software upgrade script: preps a executable (bcam, bbase) and then start it
+crontab_base.txt | base SD | utility | starts dont_blank_screen on reboot
+crontab_cam.txt | cam SD | utility | currently an attempt to workaround camera not connecting
+dhcpcd_template.conf | SD | networking | DHCP configuration file
+dnsmasq.conf | base SD | networking | used in base Access Point configuration
+dont_blank_screen.sh | base SD | utility | uses xset display options to disable screen blanking
+email_log.sh | base SD | utility | optional: emails the log using command line, invoked by 'report' alias
+hostapd.conf | base SD | networking | used in base Access Point configuration
+incrontab.txt | SD | sw upgrade & logging | file writes either trigger software upgrade script or scp of logs
+init_resize.sh | NA | make SD | replaces linux image's init_resize with one that uses only 4G of the SD
+mail_on_network.service | base SD | utility | 
+make_boomer_sdcard.sh | NA| make SD | after using imager: creates boomer directory structure and modifies config files
+process_staged_files.sh | SD | SW upgrade | invoked by incron: scp's cam images from base to cam; installs bbase
+score_update.py | base SD | write_sheets | invoked by incron: writes the data in score_update.json to a google sheet
+scp_log.sh | SD | utility | invoked by incron: copies log files to Daves RPi
+setdate.sh | SD | utility | gets the timestamp from the base and updates the date; obsolete - moving to use NTP
+ssh_config.txt | SD | networking | put in .ssh/config to allow use of names instead of IP addresses
+sync_repos.sh | SD | SW upgrade | used in-lieu of git pull for CPUs not connected to the internet - should be replaced by apt proxy
+update.sh | SD | SW upgrade | does git pull of base repositories (drills, boomer_supporting_files, etc). Should add cam updating.
+wpa_supplicant_base.conf | SD | networking | replaces default list of WiFi SSID and passwords
+wpa_supplicant.conf | SD | networking | replaces default list of WiFi SSID and passwords
 
 ## Making SD cards and images
 There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set configuration settings and install supporting applications, libraries, etc. 

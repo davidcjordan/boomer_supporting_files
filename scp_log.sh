@@ -57,6 +57,22 @@ if [ "$2" == "score_update.json" ]; then
   exit 0
 fi
 
+# on base: email workout analytics
+analytics_file="workout_analytics.csv"
+subject="$(hostname) workout analytics"
+if [ "$2" == $analytics_file ]; then
+  printf "emailing $analytics_file\n"
+  cd /run/shm
+  cat $analytics_file | mutt -s "$subject" -- roi.co.4444@gmail.com
+  if [ $? -eq 0 ]; then
+    printf "OK: emailed $analytics_file\n"
+  else
+    printf "Failed: emailed $analytics_file\n" >&2
+    exit 1
+  fi
+  exit 0
+fi
+
 user_id="pi"
 log_dir="/home/${user_id}/boomer/logs/"
 shm_dir="/run/shm"

@@ -2,6 +2,9 @@
 ## Overview
 It is assumed the reader understands there are 3 Raspberry Pi's running Linux: the base and the 2 cameras. The reader should be familiar with linux/unix facilities, such as shells, systemd, scripts, aliases, etc.
 
+There is a duplicate overview in a google doc [Boomer Software Development Repositories](https://docs.google.com/document/d/1ee05_h8KtsDW-OwJQaSIHCyQTSbDtBebH0CIKDigiBk/edit?pli=1)
+
+
 The topics covered in this file are:
 - making SD cards and/or images
   - scripts

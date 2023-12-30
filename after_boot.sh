@@ -191,6 +191,7 @@ if [ $is_base -eq 1 ]; then
    sudo systemctl unmask hostapd.service 
    sudo apt --yes install gpiod
    sudo apt --yes install mutt  #mail client used to email power-on or reports
+   sudo apt --yes install matchbox-keyboard #virtual keyboard for touchscreen. https://raspberrytips.com/install-virtual-keyboard-raspberry-pi/
 
    # the tailscale service is used to ssh into base-N which are connected to the internet to do maintenance
    sudo apt --yes install apt-transport-https  #refer to: https://tailscale.com/kb/1025/install-rpi/
@@ -208,14 +209,10 @@ if [ $is_base -eq 1 ]; then
    sudo apt --yes install ntp
 
    #have chromium autostart; refer to: https://forums.raspberrypi.com/viewtopic.php?t=294014
-   #  could use --kiosk mode which doesn't allow F11 to get out of full screen mode
-   # need to disable the 'Restore Chromium' refer to: https://raspberrypi.stackexchange.com/questions/68734/how-do-i-disable-restore-pages-chromium-didnt-shut-down-correctly-prompt#85827
-   # the following worked, but is unnecesssary with the disable restore
-   # sudo chattr +i /home/pi/.config/chromium/Default/Preferences
-   # the following attempt at disabling the restore didnt work:
-   # sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences
-   # sed -i 's/"exit_type": "Crashed"/"exit_type": "Normal"/' ~/.config/chromium/Default/Preferences
-   # echo "@chromium --start-fullscreen --disable-infobars http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
+   # fullscreen mode allows F11 to get out of full screen mode if a keyboard is connected
+   # for more info on auto start options: 
+   #    https://stackoverflow.com/questions/42503701/chromium-kiosk-mode-fullscreen-and-remove-address-bar
+   # echo "@chromium --start-fullscreen --disable-infobars --noerrdialogs --enable-features=OverlayScrollbar,OverlayScrollbarFlashAfterAnyScrollUpdate,OverlayScrollbarFlashWhenMouseEnter http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
    echo "@chromium --kiosk --disable-restore-session-state http://localhost:1111" | sudo tee -a /etc/xdg/lxsession/LXDE-pi/autostart
    
    cd ~/repos

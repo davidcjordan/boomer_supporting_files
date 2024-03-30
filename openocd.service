@@ -1,0 +1,19 @@
+[Unit]
+Description=OpenOCD Daemon
+
+[Service]
+Type=simple
+RemainAfterExit=True
+#WorkingDirectory=/home/pi/boomer/staged
+ExecStart=/bin/sh -c 'sleep 1; exec openocd -s tcl -f ~/repos/boomer_supporting_files/openocd-soc.cfg'
+#StandardOutput=inherit
+#StandardError=inherit
+RestartSec=10
+Restart=always
+#Restart=on-failure
+#SuccessExitStatus=3 4
+#RestartForceExitStatus=3 4
+
+[Install]
+WantedBy=default.target
+

@@ -70,15 +70,7 @@ if [ -z $3 ]; then
 else
    printf "Using Tom's network addresses\n"
    eth_ip_A_B_C="10.0.1."
-   if [ $is_base -eq 1 ]; then
-       eth_ip_D="102"
-   elif [[ $1 == "left"* ]]; then
-       eth_ip_D="103"
-   elif [[ $1 == "right"* ]]; then
-       eth_ip_D="104"
-   else
-       eth_ip_D="106"
-   fi
+   eth_ip_D="110"
 fi
 
 daves_enet_ip_A_B_C_D="${eth_ip_A_B_C}40"
@@ -146,7 +138,7 @@ fi
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
-# builtin wpa is disabled on camera & spkr RPi; so configure wpa0
+# builtin wlan0 is disabled on camera & spkr RPi; so configure wlan0 on
 # the base uses the built-in wpa0 to connect to nearby WiFi, use dhcp for wlan0
 #   and use wlan1 to host BOOM_NET
 if [ $is_base -eq 1 ]; then
@@ -160,7 +152,7 @@ else
    sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 fi
 
-# updating wpa_supplicant.conf is now down in after_boot, since the imager's advanced options overwrite it.
+# updating wpa_supplicant.conf is now performed in after_boot, since the imager's advanced options overwrite it.
 
 # init_resize.sh has been modified to keep the filesystem at 4G instead of the whole SD card
 cp -v ${source_dir}/init_resize.sh /media/rootfs/usr/lib/raspi-config
@@ -210,6 +202,7 @@ if [ $is_base -eq 1 ]; then
    sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
    sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user
    sudo -u ${user_id} cp -p ${source_dir}/base_bluetooth.service .config/systemd/user
+   sudo -u ${user_id} cp -p ${source_dir}/openocd.service .config/systemd/user
    sudo -u ${user_id} cp -p ${source_dir}/.muttrc .
    sed -i "s/NN/${base_id}/" .muttrc
    # add drivers for USB-bluetooth adapter:

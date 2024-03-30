@@ -155,7 +155,10 @@ if [ $? -ne 0 ]; then
    printf "locale-gen failed.\n"
 fi
 
-sudo update-locale en_US.UTF-8
+# not sure which of these local commands works; locale change requires reboot?
+# sudo update-locale en_US.UTF-8
+# NOTE: the following does not change the locale for the current session; the next session will have it
+sudo localectl set-locale LANG=en_US.utf8 
 if [ $? -ne 0 ]; then
    printf "update-locale failed.\n"
 fi
@@ -194,10 +197,7 @@ if [ $is_base -eq 1 ]; then
    sudo apt --yes install matchbox-keyboard #virtual keyboard for touchscreen. https://raspberrytips.com/install-virtual-keyboard-raspberry-pi/
 
    # the tailscale service is used to ssh into base-N which are connected to the internet to do maintenance
-   sudo apt --yes install apt-transport-https  #refer to: https://tailscale.com/kb/1025/install-rpi/
-   curl -fsSL https://pkgs.tailscale.com/stable/raspbian/buster.gpg | sudo apt-key add -
-   curl -fsSL https://pkgs.tailscale.com/stable/raspbian/buster.list | sudo tee /etc/apt/sources.list.d/tailscale.list
-   sudo apt --yes install tailscale
+   curl -fsSL https://tailscale.com/install.sh | sh
 
    sudo apt --yes install imagemagick  #used to change PNG to JPEG using the convert command
   
@@ -240,6 +240,7 @@ if [ $is_base -eq 1 ]; then
    cd ~/boomer
    ln -s ~/repos/drills .
    ln -s execs/bbase.out .
+
    # the following is necessary to not have the screen blank
    ln -s ${source_dir}/dont_blank_screen.sh .
    crontab ${source_dir}/crontab_base.txt
@@ -252,14 +253,16 @@ if [ $is_base -eq 1 ]; then
 
    systemctl --user enable base_gui.service
    systemctl --user enable base_bluetooth.service
+   systemctl --user enable openocd.service
 
    #install capability to write a google sheet for the customer's performance records
+   cd ~/repos
    git clone https://github.com/manningt/write_sheet
    if [ $? -ne 0 ]; then
       printf "clone of write_sheet failed.\n"
       exit 1
    fi
-   # install python packages for python web-server
+   # install python packages for write_sheets
    sudo apt --yes install libssl-dev
    cd write_sheet
    python3 -m virtualenv venv_sheets
@@ -274,6 +277,7 @@ if [ $is_base -eq 1 ]; then
    # source "$HOME/.cargo/env"
 fi
 
+# the following is obsolete, but should not be invoked either:
 if [ $is_spkr -eq 1 ]; then
    sudo apt --yes install mpg123
    # get audio files;
@@ -291,7 +295,7 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-# need to transfer in executables
+# TODO: need to transfer in executables: bbase, bcam
 systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)

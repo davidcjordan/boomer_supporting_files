@@ -10,6 +10,10 @@ alias bt="~/repos/control_ipc_utils/bt.py"
 alias report="~/repos/boomer_supporting_files/email_log.sh"
 alias make_wav_all='cd ~/repos/audio; for f in *.mp3; do mpg123 -m -2 -q -w "/home/pi/boomer/audio/${f%.mp3}.WAV" "$f"; done; echo done'
 
+alias soc-reset="openocd -f ~/repos/boomer_supporting_files/openocd-soc.cfg -c 'init; reset; exit'"
+alias soc-flash="openocd -f ~/repos/boomer_supporting_files/openocd-soc.cfg -c 'init; program soc_firmware.elf; verify; reset; exit'"
+alias soc-diag="minicom --device /dev/ttyAMA1 --baudrate 500000"
+
 alias checksync='sudo tcpdump -i wlan1 -x -c3 not arp | egrep "left|right|0x0010" | ~/repos/boomer_supporting_files/cam_sync_check.py'
 
 alias scap='function _scap(){ sudo setcap "cap_sys_nice=eip" $1; };_scap'
@@ -21,8 +25,6 @@ alias temp='/usr/bin/vcgencmd measure_temp'
 alias basesync='~/repos/boomer_supporting_files/basesync.sh'
 alias bcamsync='~/repos/boomer_supporting_files/bcamsync.sh'
 
-alias get_idf='. $HOME/esp/esp-idf/export.sh'
-
 alias bclean='rm -v /home/pi/repos/launcher/build/CMakeFiles/*/*.o; rm -v /home/pi/repos/boomer_cam/build/CMakeFiles/*/*.o'
 
 alias uistop='systemctl --user stop base_gui.service'
@@ -32,7 +34,7 @@ alias uistat='systemctl --user status base_gui.service'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias grep='grep --color=auto'
-alias ls='ls --color=auto'
+#alias ls='ls --color=auto'
 alias pulse16='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 16688200 > period; echo 8000000 > duty_cycle; echo 1 > enable'\'''
 alias pulse21='sudo sh -c '\''cd /sys/class/pwm/pwmchip0; echo 0 > export; cd pwm0; echo 21000000 > period; echo 8000000 > duty_cycle; echo 1 > enable'\'''
 

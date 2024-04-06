@@ -253,7 +253,7 @@ if [ $is_base -eq 1 ]; then
 
    systemctl --user enable base_gui.service
    systemctl --user enable base_bluetooth.service
-   systemctl --user enable openocd.service
+   # systemctl --user enable openocd.service   <- don't need service - can just call reset flash from the command line
 
    #install capability to write a google sheet for the customer's performance records
    cd ~/repos

@@ -11,7 +11,7 @@ alias report="~/repos/boomer_supporting_files/email_log.sh"
 alias make_wav_all='cd ~/repos/audio; for f in *.mp3; do mpg123 -m -2 -q -w "/home/pi/boomer/audio/${f%.mp3}.WAV" "$f"; done; echo done'
 
 alias soc-reset="openocd -f ~/repos/boomer_supporting_files/openocd-soc.cfg -c 'init; reset; exit'"
-alias soc-flash="openocd -f ~/repos/boomer_supporting_files/openocd-soc.cfg -c 'init; program soc_firmware.elf; verify; reset; exit'"
+alias soc-flash="openocd -f ~/repos/boomer_supporting_files/openocd-soc.cfg -c 'init; program soc_firmware.elf verify reset exit'"
 alias soc-diag="minicom --device /dev/ttyAMA1 --baudrate 500000"
 
 alias checksync='sudo tcpdump -i wlan1 -x -c3 not arp | egrep "left|right|0x0010" | ~/repos/boomer_supporting_files/cam_sync_check.py'

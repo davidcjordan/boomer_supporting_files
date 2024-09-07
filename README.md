@@ -64,6 +64,12 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
 
  
 ### Notes:
+Boomer is using an old version of raspian - specifically 'buster'.  This is because of the Arducam driver.  I've been flashing the 'Lite' image for the camera's flash, and the 'Desktop' image for the base.
+Buster Lite can be downloaded from here: https://downloads.raspberrypi.org/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2022-04-07/
+Buster Desktop: https://downloads.raspberrypi.org/raspios_oldstable_armhf/images/raspios_oldstable_armhf-2022-04-07/
+
+These directories were found via this webpage: https://support.pishop.us/article/137-official-links-to-raspberry-pi-os-buster
+
 Here is the timing of making an SD-card with the scripts:
 * imager: about 10 minutes
 * make_boomer_sdcard: less than a minute

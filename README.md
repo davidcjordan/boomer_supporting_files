@@ -56,19 +56,35 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
 - These scripts run on a linux machine, presumably an RPi, with the target sd-card plugged into an adapter:
   - the boot partition is sdx1 where x is a, b,c or d based on where is plugged in
   - the linux partition is sdx2
-- These scripts are run after using raspberrypi-imager to format and load a sd-card.
-  - ! The rpi-imager advanced options need to be set using CTRL-SHIFT-x:    [reference](https://www.easyprogramming.net/raspberrypi/raspberry_pi_imager_advanced_options.php)
-    - ssh enabled, enable WiFi to set country code and temporary SID, locale settings
-    - these settings can be saved and used on multiple runs if the imager
-  - ! the scripts should be run as sudo, like this: ```sudo bash make_boomer_sdcard.sh base sdb```  [reference](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
 
+### sequence:
+1. download raspios images (refer to notes below for URL)
+1. git clone davidcjordan/boomer_support_files if not already done so and 'cd' into the directory
+1. insert SD card in a USB SD card adapter - USB3 preferred for speed
+1. ```sudo rpi-imager --cli /home/pi/Downloads/2022-04-04-raspios-buster-armhf.img.xz /dev/sdb```
+1. ```sudo bash make_boomer_sdcard.sh base-n sdb 10.0.1.113```  The last argument is the IP address configured for the ethernet port when booting with this card.  If no IP address is given, then a default enet IP is configured.
+1. remove the SD card, put it in the target RPi and power it up. The RPi should be connected to a router via enet, and that router should have access to the internet in order to download software
+1. ssh pi@IP using the the IP address configured for the enet (the 3rd argument for make_boomer_sdcard). The password to use is the default raspios password 'raspberry'.  The password will be changed by the after_boot script.
+1. ```cd repos/boomer_supporting_files```
+1. ```export GITHUB_TOKEN=ghp_YourTokenHere```
+1. ```./after_boot.sh```
+1. ```sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2```
+1. ```sudo tailscale up```
+1. ```sudo timedatectl set-timezone America/New_York```
+1. ```sudo reboot```
+1. after the target RPi has booted: ```scp <boomer_executable> pi@enet_IP:boomer/staged```
  
 ### Notes:
 Boomer is using an old version of raspian - specifically 'buster'.  This is because of the Arducam driver.  I've been flashing the 'Lite' image for the camera's flash, and the 'Desktop' image for the base.
+
 Buster Lite can be downloaded from here: https://downloads.raspberrypi.org/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2022-04-07/
+
 Buster Desktop: https://downloads.raspberrypi.org/raspios_oldstable_armhf/images/raspios_oldstable_armhf-2022-04-07/
 
 These directories were found via this webpage: https://support.pishop.us/article/137-official-links-to-raspberry-pi-os-buster
+
+[reference for running bash scripts as sudo ](https://stackoverflow.com/questions/18809614/execute-a-shell-script-in-current-shell-with-sudo-permission#23506912)
+
 
 Here is the timing of making an SD-card with the scripts:
 * imager: about 10 minutes

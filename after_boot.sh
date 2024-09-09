@@ -87,6 +87,31 @@ fi
 rfkill unblock wifi
 rfkill unblock bluetooth
 
+# fix locale warning:
+sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
+if [ $? -ne 0 ]; then
+   printf "enable of en_US in /etc/locale.gen failed.\n"
+fi
+sudo locale-gen
+if [ $? -ne 0 ]; then
+   printf "locale-gen failed.\n"
+fi
+
+# not sure which of these local commands works; locale change requires reboot?
+# sudo update-locale en_US.UTF-8
+# NOTE: the following does not change the locale for the current session; the next session will have it
+sudo localectl set-locale LANG=en_US.utf8 
+if [ $? -ne 0 ]; then
+   printf "update-locale failed.\n"
+fi
+# sudo locale-gen --purge --no-archive 
+# sudo update-initramfs -u
+
+# set locale for this script; locale will permanently be fixed after rebooting
+LC_ALL='en_US.utf8'; export LC_ALL
+LC_LANG='en_US.utf8'
+
 # without update, then install libopencv will fail
 sudo apt update && sudo apt --yes upgrade
 
@@ -144,26 +169,6 @@ sudo systemctl disable hciuart.service
 #    sudo systemctl disable systemd-timesyncd.service
 # fi
 
-# fix locale warning:
-sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
-sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
-if [ $? -ne 0 ]; then
-   printf "enable of en_US in /etc/locale.gen failed.\n"
-fi
-sudo locale-gen
-if [ $? -ne 0 ]; then
-   printf "locale-gen failed.\n"
-fi
-
-# not sure which of these local commands works; locale change requires reboot?
-# sudo update-locale en_US.UTF-8
-# NOTE: the following does not change the locale for the current session; the next session will have it
-sudo localectl set-locale LANG=en_US.utf8 
-if [ $? -ne 0 ]; then
-   printf "update-locale failed.\n"
-fi
-# sudo locale-gen --purge --no-archive 
-# sudo update-initramfs -u
 
 sudo apt --yes install git
 #sudo apt --yes install i2c-dev
@@ -299,7 +304,7 @@ fi
 systemctl --user enable boomer.service
 
 # load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
-if [ $is_camera -eq 1 ] || [$is_spkr -eq 1 ]; then
+if [ $is_camera -eq 1 ]; then
    # crontab ${source_dir}/crontab_cam.txt
    sudo apt --yes install ntp
    if [ $? -ne 0 ]; then

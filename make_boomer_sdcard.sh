@@ -16,8 +16,8 @@
 if [ -z $2 ]; then
  printf "arg 2 (sd card, e.g. sdb or sdc) is empty\n"
  printf "usage: sudo bash make_boomer_sdcard.sh function sdcard\n"
- printf "       where function is one of <base-N, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
- printf "sudo bash make_boomer_sdcard.sh base-N sdb\n"
+ printf "       where function is one of <base-n, left, right, spkr> and sdcard is usually sdb or sdc, e.g.\n"
+ printf "sudo bash make_boomer_sdcard.sh base-n sdb\n"
  exit 1
 fi
 
@@ -68,9 +68,11 @@ if [ -z $3 ]; then
        eth_ip_D="46"
    fi
 else
-   printf "Using Tom's network addresses\n"
-   eth_ip_A_B_C="10.0.1."
-   eth_ip_D="110"
+   printf "Using IP=$3 for the enet in /etc/dhcpcd.conf\n"
+   IFS='.' read -r a b c d <<< "$3"
+   #printf "Octet 1: $a  Octet 2: $b  Octet 3: $c  Octet 4: $d\n"
+   eth_ip_A_B_C="$a.$b.$c."
+   eth_ip_D="$d"
 fi
 
 daves_enet_ip_A_B_C_D="${eth_ip_A_B_C}40"
@@ -152,7 +154,12 @@ else
    sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 fi
 
-# updating wpa_supplicant.conf is now performed in after_boot, since the imager's advanced options overwrite it.
+# copy in the wifi config.  Developer networks can be put in the wpa_supplicant_base.conf file.
+if [ $is_base -eq 1 ]; then
+   cp ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/
+else
+   cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/
+fi
 
 # init_resize.sh has been modified to keep the filesystem at 4G instead of the whole SD card
 cp -v ${source_dir}/init_resize.sh /media/rootfs/usr/lib/raspi-config

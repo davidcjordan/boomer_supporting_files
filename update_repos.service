@@ -1,0 +1,11 @@
+[Unit]
+Description=Run update.sh to 'pull origin' for ~/repos
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/repos/boomer_supporting_files/update.sh
+
+[Install]
+WantedBy=default.target

@@ -47,7 +47,8 @@ scp_log.sh | SD | utility | invoked by incron: copies log files to Daves RPi
 setdate.sh | SD | utility | gets the timestamp from the base and updates the date; obsolete - moving to use NTP
 ssh_config.txt | SD | networking | put in .ssh/config to allow use of names instead of IP addresses
 sync_repos.sh | SD | SW upgrade | used in-lieu of git pull for CPUs not connected to the internet - should be replaced by apt proxy
-update.sh | SD | SW upgrade | does git pull of base repositories (drills, boomer_supporting_files, etc). Should add cam updating.
+update.sh | SD | SW upgrade | does git pull of base repositories (drills, boomer_supporting_files, etc).
+update_repos.service | SD | SW upgrade | launches update.sh on boot
 wpa_supplicant_base.conf | SD | networking | replaces default list of WiFi SSID and passwords
 wpa_supplicant.conf | SD | networking | replaces default list of WiFi SSID and passwords
 

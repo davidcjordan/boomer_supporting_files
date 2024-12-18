@@ -16,11 +16,13 @@ if [[ $(hostname) == "base"* ]]; then
 else
    is_base=0
 fi
+
 # printf "is_base=${is_base}\n"
-if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
-   echo "type: 'export GITHUB_TOKEN=something' before running script"; 
-   exit 1
-fi
+# all of Boomer's repos are public except 'launcher' and 'boomer_cam' so token is not necessary
+# if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
+#    echo "type: 'export GITHUB_TOKEN=something' before running script"; 
+#    exit 1
+# fi
 
 if [[ $(hostname) =~ ^(left|right)$ ]]; then 
    is_camera=1
@@ -225,8 +227,9 @@ if [ $is_base -eq 1 ]; then
    git clone https://github.com/${GITHUB_USER}/drills
    git clone https://github.com/${GITHUB_USER}/audio
    git clone https://github.com/${GITHUB_USER}/control_ipc_utils
-   #private repos:
-   git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
+   git clone https://github.com/${GITHUB_USER}/ui-webserver
+   #previously private repos:
+   # git clone https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/${GITHUB_USER}/ui-webserver
    if [ $? -ne 0 ]; then
       printf "clone of ui-webserver failed.\n"
       exit 1

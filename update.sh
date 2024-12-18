@@ -1,21 +1,29 @@
 #!/bin/bash
 
-ping -c1 github.com &> /dev/null
-if [ $? -ne 0 ]; then
-   printf "Can't ping github.com: Not connected to the internet? resolv.con error?\n"
-   exit 1
-fi
+HOST="github.com"
+MAX_RETRIES=10
+RETRY_SECONDS=3
+retries=0
 
-if [[ -z "${GITHUB_TOKEN}" && is_base -eq 1 ]]; then 
-   echo "enter: 'export GITHUB_TOKEN=something' before running script"; 
-   exit 1
-fi
+while ! ping -c 1 "$HOST" &> /dev/null; do
+   if [ $retries -ge $MAX_RETRIES ]; then
+      printf "Maximum number of retries ($MAX_RETRIES) reached. Exiting."
+      exit 1
+   fi
+   ((retries++))
+   printf "Ping to $HOST failed. Retrying in $RETRY_SECONDS seconds: attempt $retries out of $MAX_RETRIES.\n"
+   sleep $RETRY_SECONDS 
+done
 
-# to be deleted if not used:
 if [[ $(hostname) == "base"* ]]; then 
    is_base=1
 else
    is_base=0
+fi
+if [ $is_base -eq 1 ]; then
+   repo_dirs=( boomer_supporting_files audio drills control_ipc_utils ui-webserver )
+else
+   repo_dirs=( boomer_supporting_files)
 fi
 
 cd ~/repos
@@ -23,8 +31,6 @@ if [ $? -ne 0 ]; then
    printf "No ~/repos directory\n"
    exit 1
 fi
-
-repo_dirs=( audio drills boomer_supporting_files control_ipc_utils ui-webserver )
 
 for directory in "${repo_dirs[@]}"
 do
@@ -54,4 +60,3 @@ do
    fi
    cd ~/repos
 done
-

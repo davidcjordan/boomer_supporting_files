@@ -1,3 +1,4 @@
-/home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@ $# > /home/pi/boomer/script_logs/scp_logs.log 2>&1
-/home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/boomer/process_staged_files.sh $@ $# > /home/pi/boomer/script_logs/process_staged_files.log 2>&1
-/run/shm                IN_CLOSE_WRITE   /home/pi/boomer/scp_log.sh $@ $# > /home/pi/boomer/script_logs/scp_shm_logs.log 2>&1
+/home/pi/boomer/logs    IN_CLOSE_WRITE   /home/pi/repos/boomer_supporting_files/scp_log.sh $@ $# > /home/pi/boomer/script_logs/scp_logs.log 2>&1
+/home/pi/boomer/staged  IN_CLOSE_WRITE  /home/pi/repos/boomer_supporting_files/process_staged_files.sh $@ $# > /home/pi/boomer/script_logs/process_staged_files.log 2>&1
+/run/shm                IN_CLOSE_WRITE   /home/pi/repos/boomer_supporting_files/scp_log.sh $@ $# > /home/pi/boomer/script_logs/scp_shm_logs.log 2>&1
+/home/pi/repos/audio  IN_CLOSE_WRITE,IN_MODIFY  /home/pi/repos/boomer_supporting_files/make_wav.sh $@ $# > /home/pi/boomer/script_logs/make_wav.log 2>&1

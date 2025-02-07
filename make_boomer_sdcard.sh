@@ -92,10 +92,11 @@ else
    my_boom_net_ip_A_B_C_D=${spkr_boom_net_ip_A_B_C_D}
 fi
 
+#NOTE: - make these variables part of the run options or auto-prompt user for them / confirm
 mount_root_dir="/media/rootfs"
 mount_boot_dir="/media/boot"
-user_id="pi"
-source_dir="/home/${user_id}/repos/boomer_supporting_files"
+user_id="ethernin"
+source_dir="/home/${user_id}/BoomerPi_Build_SDcard/boomer_supporting_files"
 staged_dir="/home/${user_id}/boomer/staged/"
 execs_dir="/home/${user_id}/boomer/execs"
 
@@ -135,7 +136,7 @@ echo "${spkr_boom_net_ip_A_B_C_D}    spkr" >> hosts
 echo "${daves_enet_ip_A_B_C_D}    daves" >> hosts
 
 if [ -e dhcpcd.conf ]; then
-   mv -v dhcpcd.conf dhchpcd.conf-original
+   mv -v dhcpcd.conf dhcpcd.conf-original
 fi
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf

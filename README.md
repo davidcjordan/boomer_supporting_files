@@ -61,7 +61,7 @@ There are scripts ```make_boomer_sdcard.sh``` and ```after_boot.sh``` which set 
 ### sequence:
 1. download raspios images (refer to notes below for URL)
 1. git clone davidcjordan/boomer_support_files if not already done so and 'cd' into the directory
-1. insert SD card in a USB SD card adapter - USB3 preferred for speed
+1. insert SD card in a USB SD card adapter - USB3 preferred for speed.  Note: the convention has been the cameras use the lite image and the base uses the desktop image.  So far, 32GB cards have proved adequate.
 1. ```sudo rpi-imager --cli /home/pi/Downloads/2022-04-04-raspios-buster-armhf.img.xz /dev/sdb```
 1. ```sudo bash make_boomer_sdcard.sh base-n sdb 10.0.1.113```  The last argument is the IP address configured for the ethernet port when booting with this card.  If no IP address is given, then a default enet IP is configured.
 1. remove the SD card, put it in the target RPi and power it up. The RPi should be connected to a router via enet, and that router should have access to the internet in order to download software

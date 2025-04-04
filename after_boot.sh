@@ -91,7 +91,7 @@ rfkill unblock bluetooth
 
 # fix locale warning:
 sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
-sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
+# sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
 if [ $? -ne 0 ]; then
    printf "enable of en_US in /etc/locale.gen failed.\n"
 fi
@@ -103,7 +103,7 @@ fi
 # not sure which of these local commands works; locale change requires reboot?
 # sudo update-locale en_US.UTF-8
 # NOTE: the following does not change the locale for the current session; the next session will have it
-sudo localectl set-locale LANG=en_US.utf8 
+sudo raspi-config nonint do_change_locale en_US.UTF-8
 if [ $? -ne 0 ]; then
    printf "update-locale failed.\n"
 fi
@@ -111,8 +111,8 @@ fi
 # sudo update-initramfs -u
 
 # set locale for this script; locale will permanently be fixed after rebooting
-LC_ALL='en_US.utf8'; export LC_ALL
-LC_LANG='en_US.utf8'
+LC_ALL='en_US.UTF-8'; export LC_ALL
+LC_LANG='en_US.UTF-8'
 
 # without update, then install libopencv will fail
 sudo apt update && sudo apt --yes upgrade
@@ -171,7 +171,6 @@ sudo systemctl disable hciuart.service
 #    sudo systemctl disable systemd-timesyncd.service
 # fi
 
-
 sudo apt --yes install git
 #sudo apt --yes install i2c-dev
 sudo apt --yes install i2c-tools
@@ -185,9 +184,15 @@ if [ $is_camera -eq 1 ]; then
    cd ~/boomer
    ln -s execs/bcam.out .
    # install ntp client so the cameras can get the time from the base:
-   sudo apt --yes apt install ntpdate
-   echo "server 192.168.27.2 prefer iburst" | sudo tee -a /etc/ntp.conf
-   sudo sed -i "s/pool/#pool/" /etc/ntp.conf
+   sudo apt --yes install ntpdate
+   if [ $? -ne 0 ]; then
+      printf "install of ntp client failed.\n"
+   fi
+   sudo sed -i "s/#server ntp.your-provider.example/server 192.168.27.2 prefer iburst/" /etc/ntp.conf
+   if [ $? -ne 0 ]; then
+      printf "configuration ntp client failed.\n"
+   fi
+   sudo sed -i "s/pool/# pool/" /etc/ntp.conf
 fi
 
 GITHUB_USER=davidcjordan
@@ -239,10 +244,15 @@ if [ $is_base -eq 1 ]; then
    cd ui-webserver
    python3 -m venv venv
    . venv/bin/activate
+   python3 -m pip upgrade
    python3 -m pip install gunicorn==20.1.0 eventlet==0.30.2
-   python3 -m pip install flask
-   python3 -m pip install flask-socketio
-   ./ui-webserver/make-links.sh
+   # refer to these versions in 2022: https://github.com/miguelgrinberg/python-socketio/discussions/1042
+   # otherwise get the error: type object 'Server' has no attribute 'reason'
+   python3 -m pip install python-engineio==4.3.4
+   python3 -m pip install python-socketio==5.7.1
+   python3 -m pip install flask==2.2.5
+   python3 -m pip install flask-socketio==5.3.1
+    ./make-links.sh
    deactivate
    
    cd ~/boomer
@@ -261,28 +271,44 @@ if [ $is_base -eq 1 ]; then
 
    systemctl --user enable base_gui.service
    systemctl --user enable base_bluetooth.service
+   systemctl --user enable update_repos.service
    # systemctl --user enable openocd.service   <- don't need service - can just call reset flash from the command line
 
-   #install capability to write a google sheet for the customer's performance records
+   # install files to support the STM32 on the SoC board: openocd, ocdconfig, firmware elf
+   sudo apt -y install libtool
    cd ~/repos
-   git clone https://github.com/manningt/write_sheet
-   if [ $? -ne 0 ]; then
-      printf "clone of write_sheet failed.\n"
-      exit 1
+   git clone  https://github.com/raspberrypi/openocd.git
+   cd openocd 
+   ./bootstrap
+   ./configure --enable-bcm2835gpio
+   make -j4
+   sudo make install
+
+   #currently not used: install capability to write a google sheet for the customer's performance records
+   install_write_sheets=0
+   if [ $install_write_sheets -eq 1 ]; then
+      cd ~/repos
+      git clone https://github.com/manningt/write_sheet
+      if [ $? -ne 0 ]; then
+         printf "clone of write_sheet failed.\n"
+         exit 1
+      fi
+
+      # install python packages for write_sheets
+      sudo apt --yes install libssl-dev
+      cd write_sheet
+      python3 -m virtualenv venv_sheets
+      source ./venv_sheets/bin/activate
+      pip3 install oauth2client
+      pip3 install PyOpenSSL
+      pip3 install gspread
+      deactivate
+
+      # # the following is commented out because it requires too much disk & it is interactive.
+      # ? If it is still required, it can be done on installation, along with the write_sheets config
+      # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      # source "$HOME/.cargo/env"
    fi
-   # install python packages for write_sheets
-   sudo apt --yes install libssl-dev
-   cd write_sheet
-   python3 -m virtualenv venv_sheets
-   source ./venv_sheets/bin/activate
-   pip3 install oauth2client
-   pip3 install PyOpenSSL
-   pip3 install gspread
-   deactivate
-   # the following is commented out because it requires too much disk & it is interactive.
-   # ? If it is still required, it can be done on installation, along with the write_sheets config
-   # curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   # source "$HOME/.cargo/env"
 fi
 
 # the following is obsolete, but should not be invoked either:
@@ -303,26 +329,12 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-# TODO: need to transfer in executables: bbase, bcam
 systemctl --user enable boomer.service
-
-# load crontab with a command to set the date on reboot or daily: @daily date --set="$(ssh base date)
-if [ $is_camera -eq 1 ]; then
-   # crontab ${source_dir}/crontab_cam.txt
-   sudo apt --yes install ntp
-   if [ $? -ne 0 ]; then
-      printf "install of ntp client failed.\n"
-   fi
-   sudo sed -i "s/#server ntp.your-provider.example/server 192.168.27.2 prefer iburst/" /etc/ntp.conf
-   if [ $? -ne 0 ]; then
-      printf "configuration ntp client failed.\n"
-   fi
-   sudo sed -i "s/pool/# pool/" /etc/ntp.conf
-fi
 
 printf "\n  Success - the sd-card has been configured.\n"
 printf "    HOWEVER: "
-printf "      1) bcam.out or bbase.out have to be loaded.\n"
+printf "      1) the newest version of bcam.out or bbase.out have to be loaded.\n"
 printf "      2) To increase the root partition size, do the following commands:\n"
 printf "          sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
 printf "      3) enable tailscale: sudo tailscale up\n"
+printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"

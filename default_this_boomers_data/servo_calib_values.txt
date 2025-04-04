@@ -1,0 +1,12 @@
+2.5 center_fast
+0.664 elev_min
+22.9 SERVE_angle
+36.0 DROP_angle
+13.5 FLAT_angle
+14.5 LOOP_angle
+19.9 CHIP_angle
+46.0 LOB_angle
+25.0 TOPSPIN_angle
+21.5 PASS_angle
+29.1 drop_speed
+41.2 lob_speed

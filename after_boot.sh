@@ -338,3 +338,4 @@ printf "      2) To increase the root partition size, do the following commands:
 printf "          sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
 printf "      3) enable tailscale: sudo tailscale up\n"
 printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
+printf "\n\n"

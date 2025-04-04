@@ -134,9 +134,6 @@ echo "${right_boom_net_ip_A_B_C_D}    right" >> hosts
 echo "${spkr_boom_net_ip_A_B_C_D}    spkr" >> hosts
 echo "${daves_enet_ip_A_B_C_D}    daves" >> hosts
 
-if [ -e dhcpcd.conf ]; then
-   mv -v dhcpcd.conf dhchpcd.conf-original
-fi
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
@@ -156,7 +153,7 @@ fi
 
 # copy in the wifi config.  Developer networks can be put in the wpa_supplicant_base.conf file.
 if [ $is_base -eq 1 ]; then
-   cp ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/
+   cp ${source_dir}/wpa_supplicant_base.conf wpa_supplicant/wpa_supplicant.conf
 else
    cp ${source_dir}/wpa_supplicant.conf wpa_supplicant/
 fi
@@ -201,15 +198,23 @@ sudo -u ${user_id} ln -s ${source_dir}/scp_log.sh
 sudo -u ${user_id} ln -s ${source_dir}/change_version.sh
 sudo -u ${user_id} ln -s ${source_dir}/process_staged_files.sh
 
+# copy in default motor/servo config files:
+cd this_boomers_data
+sudo cp ${source_dir}/default_this_boomers_data/creep_calib_values.txt .
+sudo cp ${source_dir}/default_this_boomers_data/servo_calib_values.txt .
+sudo cp ${source_dir}/default_this_boomers_data/wheel_calib_values.txt .
+
 #make boomer.service to start cam automatically
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir -p .config/systemd/user
-# TODO: make a generic boomer.service and do sed's to change the executable
+
 if [ $is_base -eq 1 ]; then
    sudo -u ${user_id} cp -p ${source_dir}/base_boomer.service .config/systemd/user/boomer.service
    sudo -u ${user_id} cp -p ${source_dir}/base_gui.service .config/systemd/user
    sudo -u ${user_id} cp -p ${source_dir}/base_bluetooth.service .config/systemd/user
-   sudo -u ${user_id} cp -p ${source_dir}/openocd.service .config/systemd/user
+   sudo -u ${user_id} cp -p ${source_dir}/update_repos.service .config/systemd/user
+   # running openocd as a service is not necessary - openocd is called from bbase using popen
+   # sudo -u ${user_id} cp -p ${source_dir}/openocd.service .config/systemd/user
    sudo -u ${user_id} cp -p ${source_dir}/.muttrc .
    sed -i "s/NN/${base_id}/" .muttrc
    # add drivers for USB-bluetooth adapter:
@@ -237,21 +242,25 @@ echo "exit 0" >> ${mount_root_dir}/etc/rc.local
 cd ${mount_root_dir}/home/${user_id}
 sudo -u ${user_id} mkdir repos; cd repos
 
-# copying boomer_supporting_files instead of cloning to avoid authentication
-sudo -u ${user_id} cp -r ${source_dir} .
-# sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
+sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
 
 # can't install arducam repository with this script - it's too big, since it's before the 
 #   initial boot resizes the root partition to fill the sd-card
 # install 5G usb-wifi adapter driver; it will be built with the after-boot script
-sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu.git
 sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 # the following was required for a previous version of the driver install script:
 # cd 88x2bu-20210702; ./ARM_RPI.sh
 
+# the following is a hack: need to find some server to store these images:
+# install boomer executables:
 if [ $is_camera -eq 1 ]; then
    sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
    sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
+fi
+if [ $is_base -eq 1 ]; then
+   sudo -u ${user_id} cp -v ~/boomer/execs/bbase.out ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} cp -v ${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} ln -s ${mount_root_dir}${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}/soc_firmware.elf
 fi
 
 # Disable "Welcome to Raspberry Pi" setup wizard at system start

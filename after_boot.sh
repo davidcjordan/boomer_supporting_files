@@ -69,25 +69,17 @@ fi
 
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
-# change the wpa_supplicant from the one installed by the imager advanced options, to the one that support BOOM_NET
-cd /etc/wpa_supplicant
-if [ -e wpa_supplicant.conf ]; then
-   sudo mv wpa_supplicant.conf wpa_supplicant.conf-original
-fi
-
-if [ $is_base -eq 1 ]; then
-   sudo cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant.conf
-else
-   sudo cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant.conf
-fi
-if [ $? -ne 0 ]; then
-   printf "copy wpa_supplicant failed.\n"
-   exit 1
-fi
-
 #enable wifi:  NOTE: this should have already been done by the imager advanced options
 rfkill unblock wifi
 rfkill unblock bluetooth
+
+#remove "welcome to Raspberry Pi splash screen" on boot-up
+sed -i "s/splash//" ${mount_boot_dir}/cmdline.txt
+#remove using tty1 as the console, since the SoC board uses tty1
+sed -i "s/console=serial0,115200 console=tty1 //" ${mount_boot_dir}/cmdline.txt
+# the following should be uncommented when shipping to customers.
+#remove quiet to see messages on boot; by default it quiet
+#sed -i "s/quiet//" ${mount_boot_dir}/cmdline.txt
 
 # fix locale warning:
 sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen

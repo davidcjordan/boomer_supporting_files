@@ -296,13 +296,6 @@ touch ${mount_boot_dir}/ssh
 # do ssh does the following:  update-rc.d ssh enable && invoke-rc.d ssh start &&
 #sed -i "s/^KBEOF$/KBEOF\nsudo raspi-config nonint do_ssh 1/" ${mount_boot_dir}/firstrun.sh
 
-## FUTURE!! - automatically call after_boot.sh from firstrun.sh ?
-
-#remove "welcome to Raspberry Pi splash screen" on boot-up
-sed -i "s/splash//" ${mount_boot_dir}/cmdline.txt
-#remove quiet to see messages on boot; by default it quiet
-#sed -i "s/quiet//" ${mount_boot_dir}/cmdline.txt
-
 sed -i "s/#dtparam=i2c_arm=on/dtparam=i2c_arm=on/" ${mount_boot_dir}/config.txt
 echo "" >> ${mount_boot_dir}/config.txt
 echo "#boomer" >> ${mount_boot_dir}/config.txt

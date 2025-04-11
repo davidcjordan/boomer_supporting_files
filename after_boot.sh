@@ -69,7 +69,22 @@ fi
 
 source_dir="/home/${USER}/repos/boomer_supporting_files"
 
-#enable wifi:  NOTE: this should have already been done by the imager advanced options
+# change the wpa_supplicant from the one installed by the imager advanced options, to the one that support BOOM_NET
+cd /etc/wpa_supplicant
+if [ -e wpa_supplicant.conf ]; then
+   sudo mv wpa_supplicant.conf wpa_supplicant.conf-original
+fi
+
+if [ $is_base -eq 1 ]; then
+   sudo cp -v ${source_dir}/wpa_supplicant_base.conf wpa_supplicant.conf
+else
+   sudo cp -v ${source_dir}/wpa_supplicant.conf wpa_supplicant.conf
+fi
+if [ $? -ne 0 ]; then
+   printf "copy wpa_supplicant failed.\n"
+   exit 1
+fi
+#enable wifi:  NOTE: this may have already been done by the imager advanced options
 rfkill unblock wifi
 rfkill unblock bluetooth
 

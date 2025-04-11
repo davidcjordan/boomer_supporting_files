@@ -254,11 +254,16 @@ sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 # the following is a hack: need to find some server to store these images:
 # install boomer executables:
 if [ $is_camera -eq 1 ]; then
-   sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${staged_dir}
-   sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${execs_dir}
+   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/bcam.out
+   chmod +x ${mount_root_dir}${execs_dir}/bcam.out
+   sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${execs_dir}
+   chmod +x ${mount_root_dir}${execs_dir}/dat2png.out
 fi
 if [ $is_base -eq 1 ]; then
-   sudo -u ${user_id} cp -v ~/boomer/execs/bbase.out ${mount_root_dir}${staged_dir}
+   sudo -u ${user_id} cp -v ~/boomer/execs/bbase.out ${mount_root_dir}${execs_dir}
+   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/bbase.out
+   chmod +x ${mount_root_dir}${execs_dir}/b.out
    sudo -u ${user_id} cp -v ${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}
    sudo -u ${user_id} ln -s ${mount_root_dir}${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}/soc_firmware.elf
 fi

@@ -328,6 +328,8 @@ printf "    HOWEVER: "
 printf "      1) the newest version of bcam.out or bbase.out have to be loaded.\n"
 printf "      2) To increase the root partition size, do the following commands:\n"
 printf "          sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
-printf "      3) enable tailscale: sudo tailscale up\n"
-printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
+if [ $is_base -eq 1 ]; then
+   printf "      3) enable tailscale: sudo tailscale up\n"
+   printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
+fi
 printf "\n\n"

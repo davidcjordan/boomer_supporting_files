@@ -109,8 +109,7 @@ if [[ ( $is_base && $2 == *"base"* ) || $is_base == 0 ]]; then
    then
       printf "boomer service stopped.\n"
    else
-      printf "Failure on boomer.service stop.\n"  >&2
-      exit 1
+      printf "Failure on boomer.service stop: ignoring because bcam/base might not be running.\n"  >&2
    fi
 
    # the following should be unnecessary

@@ -40,7 +40,7 @@ elif [[ $(hostname) == "right"* ]]; then
 fi
 
 # hardcode the IP address for BOOM_NET 
-if [ $is_cam -eq 1 ]; then
+if [ $is_camera -eq 1 ]; then
    echo "interface wlan0" >> dhcpcd.conf
    echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
 fi

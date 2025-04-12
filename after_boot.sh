@@ -30,6 +30,21 @@ else
    is_camera=0
 fi
 
+# ideally this would be read from /etc/hosts
+# after reboot; the cam should connect to BOOM_NET
+boom_net_ip_A_B_C="192.168.27."
+if [[ $(hostname) == "left"* ]]; then
+   my_boom_net_ip_A_B_C_D="${$boom_net_ip_A_B_C}3"
+elif [[ $(hostname) == "right"* ]]; then
+   my_boom_net_ip_A_B_C_D="${$boom_net_ip_A_B_C}4"
+fi
+
+# hardcode the IP address for BOOM_NET 
+if [ $is_cam -eq 1 ]; then
+   echo "interface wlan0" >> dhcpcd.conf
+   echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
+fi
+
 if [[ $(hostname) == "spkr"* ]]; then 
    is_spkr=1
 else
@@ -347,4 +362,4 @@ if [ $is_base -eq 1 ]; then
    printf "      3) enable tailscale: sudo tailscale up\n"
    printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
 fi
-printf "\n\n"
+printf "and REBOOT to have changes take effect.\n\n"

@@ -137,18 +137,18 @@ echo "${daves_enet_ip_A_B_C_D}    daves" >> hosts
 cp ${source_dir}/dhcpcd_template.conf dhcpcd.conf
 sed -i "s/my_eth0_ip/${eth_ip_A_B_C}${eth_ip_D}/g" dhcpcd.conf
 sed -i "s/my_router_ip/${eth_ip_A_B_C}1/g" dhcpcd.conf
-# builtin wlan0 is disabled on camera & spkr RPi; so configure wlan0 on
+
+# wlan0 has no config in dhcpcd_template.conf, so that dhcp can be used on first boot
+# for the camera, the after_boot script will:
+#    disable the built-in wifi after the external wifi adapter driver is built
+#    configure wlan0 in dhcpcd.conf to the hardcoded left/right IP address on BOOM_NET
+
 # the base uses the built-in wpa0 to connect to nearby WiFi, use dhcp for wlan0
 #   and use wlan1 to host BOOM_NET
 if [ $is_base -eq 1 ]; then
-   # remove wlan0 config in order to use dhcp
-   sed -i "s/^.*wlan0.*//g" dhcpcd.conf
    echo "interface wlan1" >> dhcpcd.conf
    echo "  static ip_address=${base_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
    echo "  nohook wpa_supplicant" >> dhcpcd.conf
-else
-   # the speaker on has the builtin wlan; the cameras have the builtin wlan disabled, the USB-adapter is wlan0
-   sed -i "s/my_wlan0_ip/${my_boom_net_ip_A_B_C_D}/g" dhcpcd.conf
 fi
 
 # copy in the wifi config.  Developer networks can be put in the wpa_supplicant_base.conf file.

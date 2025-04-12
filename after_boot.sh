@@ -104,9 +104,9 @@ rfkill unblock wifi
 rfkill unblock bluetooth
 
 #remove "welcome to Raspberry Pi splash screen" on boot-up
-sed -i "s/splash//" /boot/cmdline.txt
+sudo sed -i "s/splash//" /boot/cmdline.txt
 #remove using tty1 as the console, since the SoC board uses tty1
-sed -i "s/console=serial0,115200 console=tty1 //" /boot/cmdline.txt
+sudo sed -i "s/console=serial0,115200 console=tty1 //" /boot/cmdline.txt
 # the following should be uncommented when shipping to customers.
 #remove quiet to see messages on boot; by default it quiet
 #sed -i "s/quiet//" /boot/cmdline.txt

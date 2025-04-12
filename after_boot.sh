@@ -34,9 +34,9 @@ fi
 # after reboot; the cam should connect to BOOM_NET
 boom_net_ip_A_B_C="192.168.27."
 if [[ $(hostname) == "left"* ]]; then
-   my_boom_net_ip_A_B_C_D="${$boom_net_ip_A_B_C}3"
+   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}3"
 elif [[ $(hostname) == "right"* ]]; then
-   my_boom_net_ip_A_B_C_D="${$boom_net_ip_A_B_C}4"
+   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}4"
 fi
 
 # hardcode the IP address for BOOM_NET 
@@ -104,12 +104,12 @@ rfkill unblock wifi
 rfkill unblock bluetooth
 
 #remove "welcome to Raspberry Pi splash screen" on boot-up
-sed -i "s/splash//" ${mount_boot_dir}/cmdline.txt
+sed -i "s/splash//" /boot/cmdline.txt
 #remove using tty1 as the console, since the SoC board uses tty1
-sed -i "s/console=serial0,115200 console=tty1 //" ${mount_boot_dir}/cmdline.txt
+sed -i "s/console=serial0,115200 console=tty1 //" /boot/cmdline.txt
 # the following should be uncommented when shipping to customers.
 #remove quiet to see messages on boot; by default it quiet
-#sed -i "s/quiet//" ${mount_boot_dir}/cmdline.txt
+#sed -i "s/quiet//" /boot/cmdline.txt
 
 # fix locale warning:
 sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen

@@ -41,9 +41,9 @@ fi
 
 # hardcode the IP address for BOOM_NET 
 if [ $is_camera -eq 1 ]; then
-   sudo sed -i -e '$a\' /etc/dhcpcd.conf
-   sudo echo "interface wlan0" >> /etc/dhcpcd.conf
-   sudo echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
+   sudo echo "
+interface wlan0
+  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
 fi
 if [ $? -eq 0 ]; then
    printf "OK: added hardcoded address ${my_boom_net_ip_A_B_C_D} to wlan0\n"

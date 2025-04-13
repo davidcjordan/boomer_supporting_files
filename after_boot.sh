@@ -41,8 +41,15 @@ fi
 
 # hardcode the IP address for BOOM_NET 
 if [ $is_camera -eq 1 ]; then
+   sudo sed -i -e '$a\' /etc/dhcpcd.conf
    sudo echo "interface wlan0" >> /etc/dhcpcd.conf
    sudo echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
+fi
+if [ $? -eq 0 ]; then
+   printf "OK: added hardcoded address ${my_boom_net_ip_A_B_C_D} to wlan0\n"
+else
+   printf "Failed: adding hardcoded address to wlan0\n" >&2
+   exit 1
 fi
 
 if [[ $(hostname) == "spkr"* ]]; then 
@@ -57,29 +64,9 @@ echo "pi:readysetcrash" | sudo chpasswd
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
 ssh-keygen -t rsa -f ${HOME}/.ssh/id_rsa -q -N ""
-if [ $? -eq 0 ]; then
-   printf "OK: ssh-copy-id pi@192.168.27.2\n"
-else
+if [ $? -eq 1 ]; then
    printf "Failed: ssh-keygen\n" >&2
    exit 1
-fi
-# add base rpi to transfer log fils over wifi
-#ssh-copy-id base
-printf "!!Skipping ssh-copy-id base\n"
-if [ $? -eq 0 ]; then
-   printf "OK: ssh-copy-id pi@192.168.27.2\n"
-else
-   printf "Failed: ssh-copy-id pi@192.168.27.2\n" >&2
-   #exit 1
-fi
-# add daves rpi to transfer log fils over enet
-#ssh-copy-id daves
-printf "!!Skipping ssh-copy-id daves\n"
-if [ $? -eq 0 ]; then
-   printf "OK: ssh-copy-id pi@192.168.28.40\n"
-else
-   printf "Failed: ssh-copy-id pi@192.168.28.40\n" >&2
-   #exit 1
 fi
 
 source_dir="/home/${USER}/repos/boomer_supporting_files"
@@ -359,8 +346,9 @@ printf "    HOWEVER: "
 printf "      1) the newest version of bcam.out or bbase.out have to be loaded.\n"
 printf "      2) To increase the root partition size, do the following commands:\n"
 printf "          sudo parted -m /dev/mmcblk0 u s resizepart 2 30GB; sudo resize2fs /dev/mmcblk0p2\n"
+printf "      3) on install, copy the ssh keys to the other computers, eg. ssh-copy-id pi@daves/left/right/base\n"
 if [ $is_base -eq 1 ]; then
-   printf "      3) enable tailscale: sudo tailscale up\n"
-   printf "      4) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
+   printf "      4) enable tailscale: sudo tailscale up\n"
+   printf "      5) Optionally enable mutt mail for 'report' by editing .muttrc with password and machine name"
 fi
 printf "and REBOOT to have changes take effect.\n\n"

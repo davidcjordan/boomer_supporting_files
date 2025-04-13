@@ -41,8 +41,8 @@ fi
 
 # hardcode the IP address for BOOM_NET 
 if [ $is_camera -eq 1 ]; then
-   echo "interface wlan0" >> dhcpcd.conf
-   echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> dhcpcd.conf
+   sudo echo "interface wlan0" >> /etc/dhcpcd.conf
+   sudo echo "  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
 fi
 
 if [[ $(hostname) == "spkr"* ]]; then 
@@ -144,6 +144,7 @@ sudo modprobe i2c-dev
 
 # build & install the wifi-driver
 if [ $is_spkr -ne 1 ]; then
+   sudo apt --yes install bc
    sudo apt --yes install dkms
    cd ~/repos/88x2bu-20210702
    sudo ./install-driver.sh NoPrompt

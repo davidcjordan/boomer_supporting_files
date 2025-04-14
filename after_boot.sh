@@ -127,7 +127,8 @@ LC_LANG='en_US.UTF-8'
 sudo apt update && sudo apt --yes upgrade
 
 # enable i2c (creates /dev/i2c-0 -1)
-sudo modprobe i2c-dev
+sudo raspi-config nonint do_i2c 0
+#sudo modprobe i2c-dev  <- modprobe doesn't persist; use raspi-config (0 enables, 1 disables)
 
 # build & install the wifi-driver
 if [ $is_spkr -ne 1 ]; then

@@ -30,27 +30,6 @@ else
    is_camera=0
 fi
 
-# ideally this would be read from /etc/hosts
-# after reboot; the cam should connect to BOOM_NET
-boom_net_ip_A_B_C="192.168.27."
-if [[ $(hostname) == "left"* ]]; then
-   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}3"
-elif [[ $(hostname) == "right"* ]]; then
-   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}4"
-fi
-
-# hardcode the IP address for BOOM_NET 
-if [ $is_camera -eq 1 ]; then
-   sudo echo "
-interface wlan0
-  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
-fi
-if [ $? -eq 0 ]; then
-   printf "OK: added hardcoded address ${my_boom_net_ip_A_B_C_D} to wlan0\n"
-else
-   printf "Failed: adding hardcoded address to wlan0\n" >&2
-   exit 1
-fi
 
 if [[ $(hostname) == "spkr"* ]]; then 
    is_spkr=1
@@ -59,7 +38,49 @@ else
 fi
 
 user_id="pi"
-echo "pi:readysetcrash" | sudo chpasswd
+echo "${user_id}:readysetcrash" | sudo chpasswd
+
+# fix locale warning:
+sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
+# sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
+if [ $? -ne 0 ]; then
+   printf "enable of en_US in /etc/locale.gen failed.\n"
+fi
+sudo locale-gen
+if [ $? -ne 0 ]; then
+   printf "locale-gen failed.\n"
+fi
+
+# sudo update-locale en_US.UTF-8
+# sudo locale-gen --purge --no-archive 
+# sudo update-initramfs -u
+# NOTE: the following does not change the locale for the current session; the next session will have it
+sudo raspi-config nonint do_change_locale en_US.UTF-8
+if [ $? -ne 0 ]; then
+   printf "update-locale failed.\n"
+fi
+
+# set locale for this script; locale will permanently be fixed after rebooting
+LC_ALL='en_US.UTF-8'; export LC_ALL
+LC_LANG='en_US.UTF-8'; export LC_LANG
+
+# without update, then install libopencv will fail
+sudo apt update && sudo apt --yes upgrade
+
+rm -f /etc/localtime
+echo "America/New_York" >/etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
+cat >/etc/default/keyboard <<'KBEOF'
+XKBMODEL="pc105"
+XKBLAYOUT="us"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+KBEOF
+dpkg-reconfigure -f noninteractive keyboard-configuration
+
+sudo apt --yes install git
+sudo apt --yes install i2c-tools
 
 #NOTE: if you name id_rsa something else then make a ln -s to id_rsa;
 #   ssh defaults to the filename id_rsa
@@ -86,9 +107,14 @@ if [ $? -ne 0 ]; then
    printf "copy wpa_supplicant failed.\n"
    exit 1
 fi
+
 #enable wifi:  NOTE: this may have already been done by the imager advanced options
 rfkill unblock wifi
+for filename in /var/lib/systemd/rfkill/*:wlan ; do
+  echo 0 > $filename
+done
 rfkill unblock bluetooth
+systemctl enable ssh
 
 #remove "welcome to Raspberry Pi splash screen" on boot-up
 sudo sed -i "s/splash//" /boot/cmdline.txt
@@ -98,45 +124,47 @@ sudo sed -i "s/console=serial0,115200 console=tty1 //" /boot/cmdline.txt
 #remove quiet to see messages on boot; by default it quiet
 #sed -i "s/quiet//" /boot/cmdline.txt
 
-# fix locale warning:
-sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
-# sudo sed -i "s/en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/" /etc/locale.gen
-if [ $? -ne 0 ]; then
-   printf "enable of en_US in /etc/locale.gen failed.\n"
-fi
-sudo locale-gen
-if [ $? -ne 0 ]; then
-   printf "locale-gen failed.\n"
-fi
-
-# not sure which of these local commands works; locale change requires reboot?
-# sudo update-locale en_US.UTF-8
-# NOTE: the following does not change the locale for the current session; the next session will have it
-sudo raspi-config nonint do_change_locale en_US.UTF-8
-if [ $? -ne 0 ]; then
-   printf "update-locale failed.\n"
-fi
-# sudo locale-gen --purge --no-archive 
-# sudo update-initramfs -u
-
-# set locale for this script; locale will permanently be fixed after rebooting
-LC_ALL='en_US.UTF-8'; export LC_ALL
-LC_LANG='en_US.UTF-8'
-
-# without update, then install libopencv will fail
-sudo apt update && sudo apt --yes upgrade
-
 # enable i2c (creates /dev/i2c-0 -1)
 sudo raspi-config nonint do_i2c 0
-#sudo modprobe i2c-dev  <- modprobe doesn't persist; use raspi-config (0 enables, 1 disables)
+if [ $? -ne 0 ]; then
+   printf "enable i2c failed.\n"
+fi
+# the following is in raspi-config, but doesn't appear to be necessary:
+# BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
+# if ! [ -e $BLACKLIST ]; then
+#     touch $BLACKLIST
+#   fi
+# sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
 
-# build & install the wifi-driver
+# build & install the wifi-driver for the Realtek 88x2bu chip (8812) used by the USB-Wifi adapter
+sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 if [ $is_spkr -ne 1 ]; then
    sudo apt --yes install bc
    sudo apt --yes install dkms
    cd ~/repos/88x2bu-20210702
    sudo ./install-driver.sh NoPrompt
    sudo sed -i "s/rtw_power_mgnt=1/rtw_power_mgnt=0/" /etc/modprobe.d/88x2bu.conf
+fi
+
+# ideally the following would be read from /etc/hosts
+boom_net_ip_A_B_C="192.168.27."
+if [[ $(hostname) == "left"* ]]; then
+   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}3"
+elif [[ $(hostname) == "right"* ]]; then
+   my_boom_net_ip_A_B_C_D="${boom_net_ip_A_B_C}4"
+fi
+
+# hardcode the IP address for BOOM_NET 
+if [ $is_camera -eq 1 ]; then
+   sudo echo "
+interface wlan0
+  static ip_address=${my_boom_net_ip_A_B_C_D}/24" >> /etc/dhcpcd.conf
+fi
+if [ $? -eq 0 ]; then
+   printf "OK: added hardcoded address ${my_boom_net_ip_A_B_C_D} to wlan0\n"
+else
+   printf "Failed: adding hardcoded address to wlan0\n" >&2
+   exit 1
 fi
 
 # use vi as an editor for crontab
@@ -165,6 +193,9 @@ echo "${USER}" | sudo tee -a /etc/incron.allow
 # configure incron table entries:
 incrontab ${source_dir}/incrontab.txt
 
+#the following is unnecessary to disable swap, using: systemctl disable dphys-swapfile.service
+#sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
+
 # disable unused services
 sudo systemctl stop avahi-daemon.service
 sudo systemctl disable avahi-daemon.service
@@ -181,10 +212,6 @@ sudo systemctl disable hciuart.service
 #    sudo systemctl stop systemd-timesyncd.service
 #    sudo systemctl disable systemd-timesyncd.service
 # fi
-
-sudo apt --yes install git
-#sudo apt --yes install i2c-dev
-sudo apt --yes install i2c-tools
 
 # load arducam shared library (.so), which requires opencv shared libraries installed first
 if [ $is_camera -eq 1 ]; then
@@ -289,7 +316,9 @@ if [ $is_base -eq 1 ]; then
    sudo apt -y install libtool
    cd ~/repos
    git clone  https://github.com/raspberrypi/openocd.git
-   cd openocd 
+   cd openocd
+   # the following is a hack to fix a compile error:
+   cp ~/repos/openocd_patch_batch.c src/target/riscv/batch.c
    ./bootstrap
    ./configure --enable-bcm2835gpio
    make -j4

@@ -98,6 +98,8 @@ user_id="pi"
 source_dir="/home/${user_id}/repos/boomer_supporting_files"
 staged_dir="/home/${user_id}/boomer/staged/"
 execs_dir="/home/${user_id}/boomer/execs"
+base_program="bbase.out"
+cam_program="bcam.out"
 
 ping -c 1 -q github.com > /dev/null
 if [ $? -ne 0 ]; then
@@ -165,22 +167,6 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-# put i2c-dev in /etc/modules file (this is usually done with raspi-config)
-# sed /etc/modules -i -e "s/^#[[:space:]]*\(i2c[-_]dev\)/\1/"
-echo "i2c-dev" >> /etc/modules
-if [ $? -ne 0 ]; then
-   printf "echo i2c-dev >> /etc/modules failed.\n"
-   exit 1
-fi
-# the following is in raspi-config, but doesn't appear to be necessary:
-# BLACKLIST=/etc/modprobe.d/raspi-blacklist.conf
-# if ! [ -e $BLACKLIST ]; then
-#     touch $BLACKLIST
-#   fi
-# sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
-
-#the following is unnecessary to disable swap, using: systemctl disable dphys-swapfile.service
-#sed -i "s/CONF_SWAPSIZE=100/CONF_SWAPSIZE=0/" dphys-swapfile
 
 # setup boomer directories and files
 cd ${mount_root_dir}/home/${user_id}
@@ -244,26 +230,19 @@ sudo -u ${user_id} mkdir repos; cd repos
 
 sudo -u ${user_id} git clone https://github.com/davidcjordan/boomer_supporting_files
 
-# can't install arducam repository with this script - it's too big, since it's before the 
-#   initial boot resizes the root partition to fill the sd-card
-# install 5G usb-wifi adapter driver; it will be built with the after-boot script
-sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
-# the following was required for a previous version of the driver install script:
-# cd 88x2bu-20210702; ./ARM_RPI.sh
-
 # the following is a hack: need to find some server to store these images:
-# install boomer executables:
+# install boomer executables; done here becuase the host machine that has the executables
 if [ $is_camera -eq 1 ]; then
-   sudo -u ${user_id} cp -v ${staged_dir}/bcam.out ${mount_root_dir}${execs_dir}
-   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/bcam.out
-   chmod +x ${mount_root_dir}${execs_dir}/bcam.out
+   sudo -u ${user_id} cp -v ${staged_dir}/${cam_program} ${mount_root_dir}${execs_dir}
+   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/${cam_program}
+   chmod +x ${mount_root_dir}${execs_dir}/${cam_program}
    sudo -u ${user_id} cp -v ${staged_dir}/dat2png.out ${mount_root_dir}${execs_dir}
    chmod +x ${mount_root_dir}${execs_dir}/dat2png.out
 fi
 if [ $is_base -eq 1 ]; then
-   sudo -u ${user_id} cp -v ~/boomer/execs/bbase.out ${mount_root_dir}${execs_dir}
-   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/bbase.out
-   chmod +x ${mount_root_dir}${execs_dir}/b.out
+   sudo -u ${user_id} cp -v ${execs_dir}/${base_program} ${mount_root_dir}${execs_dir}
+   sudo -u root -g sudo setcap 'cap_sys_nice=eip' ${mount_root_dir}${execs_dir}/${base_program}
+   chmod +x ${mount_root_dir}${execs_dir}/${base_program}
    sudo -u ${user_id} cp -v ${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}
    sudo -u ${user_id} ln -s ${mount_root_dir}${staged_dir}/soc_20240517.elf ${mount_root_dir}${staged_dir}/soc_firmware.elf
 fi

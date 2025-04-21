@@ -46,10 +46,6 @@ sudo sed -i "s/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen
 if [ $? -ne 0 ]; then
    printf "enable of en_US in /etc/locale.gen failed.\n"
 fi
-sudo locale-gen
-if [ $? -ne 0 ]; then
-   printf "locale-gen failed.\n"
-fi
 
 # sudo update-locale en_US.UTF-8
 # sudo locale-gen --purge --no-archive 
@@ -137,11 +133,14 @@ fi
 # sed $BLACKLIST -i -e "s/^\(blacklist[[:space:]]*i2c[-_]bcm2708\)/#\1/"
 
 # build & install the wifi-driver for the Realtek 88x2bu chip (8812) used by the USB-Wifi adapter
-sudo -u ${user_id} git clone https://github.com/morrownr/88x2bu-20210702
 if [ $is_spkr -ne 1 ]; then
    sudo apt --yes install bc
    sudo apt --yes install dkms
-   cd ~/repos/88x2bu-20210702
+   cd ~/repos
+   mkdir -p src
+   cd src
+   git clone https://github.com/morrownr/88x2bu-20210702
+   cd 88x2bu-20210702
    sudo ./install-driver.sh NoPrompt
    sudo sed -i "s/rtw_power_mgnt=1/rtw_power_mgnt=0/" /etc/modprobe.d/88x2bu.conf
 fi
